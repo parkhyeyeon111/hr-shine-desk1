@@ -1,0 +1,2690 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>HR SHINE DESK v14</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+--sky:#0EA5E9;--sky-l:#E0F2FE;--sky-m:#BAE6FD;--sky-d:#0284C7;--sky-deep:#0C4A6E;
+--white:#fff;--bg:#F0F7FF;--s2:#F8FBFF;--border:#DBEAFE;--border2:#BFDBFE;
+--text:#0F172A;--t2:#475569;--t3:#94A3B8;
+--green:#10B981;--red:#EF4444;--amber:#F59E0B;--purple:#8B5CF6;--pink:#EC4899;--indigo:#6366F1;
+--r:12px;--rs:8px;
+--sh:0 1px 3px rgba(14,165,233,.08),0 4px 16px rgba(14,165,233,.06);
+--shm:0 4px 24px rgba(14,165,233,.12),0 1px 4px rgba(14,165,233,.08);
+}
+html,body{height:100%;font-family:'Noto Sans KR',system-ui,sans-serif;background:var(--bg);color:var(--text);overflow:hidden}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:var(--sky-l)}
+::-webkit-scrollbar-thumb{background:var(--sky-m);border-radius:4px}
+::-webkit-scrollbar-thumb:hover{background:var(--sky)}
+.bw{display:flex;flex-direction:column;height:100vh;overflow:hidden;background:#CBD5E1}
+.bchrome{background:linear-gradient(180deg,#F1F5F9,#E2E8F0);border-bottom:1px solid #CBD5E1;padding:8px 12px 0;flex-shrink:0;box-shadow:0 2px 6px rgba(0,0,0,.08)}
+.btb{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.bdots{display:flex;gap:5px}
+.bd{width:11px;height:11px;border-radius:50%;cursor:pointer}
+.bd.r{background:#FF5F57;border:.5px solid #E0443E}
+.bd.y{background:#FEBC2E;border:.5px solid #D4A017}
+.bd.g{background:#28C840;border:.5px solid #1DAD2B}
+.btabs{display:flex;gap:2px}
+.btab{display:flex;align-items:center;gap:7px;padding:6px 16px 7px;background:#fff;border:1px solid #CBD5E1;border-bottom:none;border-radius:8px 8px 0 0;font-size:11.5px;font-weight:500;color:var(--t2)}
+.btab.active{color:var(--sky-d)}
+.baddr{display:flex;align-items:center;gap:8px;padding:4px 8px;margin:0 60px 8px;background:#fff;border:1px solid #CBD5E1;border-radius:20px;font-size:11px;color:var(--t3)}
+.bcontent{flex:1;overflow:hidden;background:var(--bg);border-top:2px solid #fff}
+.shell{display:flex;height:100%;overflow:hidden}
+.sidebar{width:220px;min-width:220px;background:var(--sky-deep);display:flex;flex-direction:column;overflow-y:auto}
+.sb-logo{padding:20px 18px 16px;border-bottom:1px solid rgba(255,255,255,.1)}
+.sb-logo-icon{width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,var(--sky),#38BDF8);display:flex;align-items:center;justify-content:center;margin-bottom:10px;box-shadow:0 4px 12px rgba(14,165,233,.4)}
+.sb-logo-t{font-size:14px;font-weight:800;color:#fff;letter-spacing:-.02em}
+.sb-logo-s{font-size:9px;color:rgba(255,255,255,.4);letter-spacing:.1em;text-transform:uppercase;margin-top:1px}
+.sb-sec{font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.3);padding:14px 18px 6px}
+.sb-nav{padding:6px 10px;flex:1}
+.nav-item{display:flex;align-items:center;gap:9px;padding:9px 12px;border-radius:9px;cursor:pointer;font-size:12.5px;font-weight:500;color:rgba(255,255,255,.55);border:none;background:transparent;width:100%;text-align:left;font-family:inherit;transition:all .15s;margin-bottom:2px}
+.nav-item:hover{background:rgba(255,255,255,.08);color:rgba(255,255,255,.85)}
+.nav-item.active{background:rgba(14,165,233,.3);color:#fff;font-weight:700;border-left:2px solid #38BDF8}
+.nav-badge{margin-left:auto;font-size:9px;padding:2px 6px;border-radius:10px;font-weight:700;background:rgba(239,68,68,.85);color:#fff}
+.nav-badge.sky{background:rgba(14,165,233,.6)}
+.sb-footer{padding:12px 18px 16px;border-top:1px solid rgba(255,255,255,.08)}
+.ldot{width:6px;height:6px;border-radius:50%;background:var(--green);display:inline-block;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
+.topbar{height:54px;padding:0 20px;background:#fff;border-bottom:1px solid var(--border2);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;box-shadow:0 1px 4px rgba(14,165,233,.08)}
+.pgcont{flex:1;overflow-y:auto;padding:16px}
+.card{background:#fff;border:1px solid var(--border2);border-radius:var(--r);box-shadow:var(--sh);margin-bottom:14px;overflow:hidden}
+.card-hd{display:flex;align-items:center;justify-content:space-between;padding:13px 18px;border-bottom:1px solid var(--border);background:linear-gradient(135deg,#fff,#F8FBFF)}
+.card-title{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;color:var(--sky-deep)}
+.card-icon{width:28px;height:28px;border-radius:8px;background:var(--sky-l);display:flex;align-items:center;justify-content:center;flex-shrink:0;border:1px solid var(--sky-m)}
+.card-body{padding:16px 18px}
+.stat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:14px}
+.stat-card{background:#fff;border:1px solid var(--border2);border-radius:var(--r);padding:16px 18px;box-shadow:var(--sh);position:relative;overflow:hidden}
+.stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--sky-d),var(--sky))}
+.stat-label{font-size:10px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px}
+.stat-value{font-size:28px;font-weight:800;color:var(--sky-d);letter-spacing:-.04em;line-height:1}
+.stat-sub{font-size:11px;color:var(--t3);margin-top:5px}
+.btn{display:inline-flex;align-items:center;gap:5px;font-family:inherit;cursor:pointer;border:none;border-radius:var(--rs);font-weight:600;transition:all .15s;white-space:nowrap}
+.btn-primary{background:linear-gradient(135deg,var(--sky-d),var(--sky));color:#fff;font-size:11.5px;padding:6px 14px;box-shadow:0 2px 8px rgba(14,165,233,.3)}
+.btn-primary:hover{transform:translateY(-1px);box-shadow:0 4px 14px rgba(14,165,233,.4)}
+.btn-ghost{background:transparent;color:var(--t2);border:1px solid var(--border2);font-size:11.5px;padding:6px 12px}
+.btn-ghost:hover{background:var(--sky-l);border-color:var(--sky-m);color:var(--sky-d)}
+.btn-secondary{background:var(--sky-l);color:var(--sky-d);border:1px solid var(--sky-m);font-size:11.5px;padding:6px 12px}
+.btn-secondary:hover{background:var(--sky-m)}
+.btn-danger{background:#FEF2F2;color:var(--red);border:1px solid #FECACA;font-size:11px;padding:5px 10px}
+.btn-sm{font-size:10.5px!important;padding:4px 10px!important}
+.badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;border:1px solid;white-space:nowrap}
+.bdg-blue{background:#EFF6FF;color:#1D4ED8;border-color:#BFDBFE}
+.bdg-red{background:#FEF2F2;color:#DC2626;border-color:#FECACA}
+.bdg-green{background:#F0FDF4;color:#16A34A;border-color:#BBF7D0}
+.bdg-purple{background:#F5F3FF;color:#7C3AED;border-color:#DDD6FE}
+.bdg-pink{background:#FDF2F8;color:#BE185D;border-color:#FBCFE8}
+.bdg-amber{background:#FFFBEB;color:#D97706;border-color:#FDE68A}
+.bdg-sky{background:var(--sky-l);color:var(--sky-d);border-color:var(--sky-m)}
+.bdg-gray{background:#F8FAFC;color:#64748B;border-color:#E2E8F0}
+.cal-cell{cursor:pointer;border-radius:8px;transition:all .1s;padding:5px;min-height:56px;display:flex;flex-direction:column;border:1px solid transparent}
+.cal-cell:hover{background:var(--sky-l)}
+.cal-cell.active{background:var(--sky)!important;color:#fff}
+.cal-cell.today{background:var(--sky-l);border-color:var(--sky)}
+.cal-cell.has-ev::after{content:'';display:block;width:4px;height:4px;border-radius:50%;background:var(--sky);margin:2px auto 0}
+.cal-cell.active.has-ev::after{background:#fff}
+.xwrap{overflow:auto;border:1px solid #CBD5E1;border-radius:8px;max-height:480px}
+.xtbl{border-collapse:collapse;width:100%;font-size:12px;min-width:900px}
+.xtbl thead{position:sticky;top:0;z-index:2}
+.xcl{background:linear-gradient(180deg,#E2E8F0,#CBD5E1);color:#64748B;font-size:10px;font-weight:700;text-align:center;padding:4px 6px;border-right:1px solid #CBD5E1;border-bottom:2px solid #CBD5E1;letter-spacing:.06em;white-space:nowrap;font-family:'DM Mono',monospace}
+.xtbl tbody tr{transition:background .1s}
+.xtbl tbody tr:nth-child(even){background:#F8FBFF}
+.xtbl tbody tr:hover{background:#EFF6FF!important}
+.xtbl tbody tr.row-sel{background:#DBEAFE!important;outline:2px solid var(--sky) inset}
+.xtbl tbody tr.row-v2{background:#F0FDF4!important}
+.xtbl td{padding:7px 10px;border-bottom:1px solid #E8EEF5;border-right:1px solid #E8EEF5;white-space:nowrap;color:var(--text);vertical-align:middle}
+.xtbl td.rnum{background:linear-gradient(180deg,#F1F5F9,#E8EEF5);color:#94A3B8;font-size:10px;font-family:'DM Mono',monospace;text-align:center;font-weight:600;padding:7px 8px;min-width:36px;border-right:2px solid #CBD5E1}
+.xtbl td.mono{font-family:'DM Mono',monospace;font-size:11px}
+.xtbl td.amt{font-family:'DM Mono',monospace;font-weight:600;color:var(--sky-d)}
+.pbar{height:6px;background:var(--sky-l);border-radius:4px;overflow:hidden}
+.pbar-fill{height:100%;border-radius:4px;transition:width .4s;background:linear-gradient(90deg,var(--sky-d),var(--sky))}
+.inp{width:100%;padding:8px 11px;border:1.5px solid var(--border2);border-radius:var(--rs);background:#fff;color:var(--text);font-family:inherit;font-size:12px;outline:none;transition:border .15s}
+.inp:focus{border-color:var(--sky);box-shadow:0 0 0 3px rgba(14,165,233,.1)}
+.inp::placeholder{color:var(--t3)}
+.inp-lbl{font-size:10.5px;font-weight:700;color:var(--t2);text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px}
+.modal-ov{position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(12,74,110,.35);backdrop-filter:blur(4px)}
+.modal-box{background:#fff;border-radius:16px;box-shadow:var(--shm),0 0 0 1px var(--border2);max-height:90vh;overflow-y:auto}
+.modal-hd{padding:18px 22px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:linear-gradient(135deg,#fff,var(--sky-l))}
+.modal-title{font-size:14px;font-weight:800;color:var(--sky-deep)}
+.modal-sub{font-size:11px;color:var(--t3);margin-top:2px}
+.modal-body{padding:18px 22px}
+.tab-bar{display:flex;gap:5px;flex-wrap:wrap}
+.tab-btn{padding:5px 13px;border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;border:1.5px solid var(--border2);background:#fff;color:var(--t3);font-family:inherit;transition:all .15s}
+.tab-btn.active{background:var(--sky-l);border-color:var(--sky);color:var(--sky-d)}
+.tab-btn:hover:not(.active){background:var(--bg)}
+.toast{position:fixed;bottom:20px;right:20px;z-index:200;background:var(--sky-deep);color:#fff;padding:10px 16px;border-radius:10px;font-size:12px;font-weight:600;box-shadow:var(--shm);animation:slidein .25s ease}
+@keyframes slidein{from{transform:translateX(120%);opacity:0}to{transform:translateX(0);opacity:1}}
+.fadein{animation:fadein .2s ease}
+@keyframes fadein{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.cl-panel{width:300px;min-width:300px;background:#fff;border-left:2px solid var(--sky-m);display:flex;flex-direction:column;overflow:hidden;flex-shrink:0}
+.cl-panel-hd{padding:14px 16px;border-bottom:1px solid var(--border);background:linear-gradient(135deg,#fff,var(--sky-l));flex-shrink:0}
+.cl-panel-body{flex:1;overflow-y:auto;padding:12px 14px}
+.cl-item{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;border:1px solid var(--border);background:#fff;margin-bottom:5px;transition:background .12s}
+.cl-item:hover{background:var(--sky-l)}
+.cl-item.done-item{background:#F0FDF4;border-color:#BBF7D0}
+.row-click{cursor:pointer}
+select.inp option{background:white;color:var(--text)}
+
+
+.bdg-indigo{background:#EEF2FF;color:#4338CA;border-color:#C7D2FE}
+.bdg-sky{background:var(--sky-l);color:var(--sky-d);border-color:var(--sky-m)}
+
+
+.bdg-indigo{background:#EEF2FF;color:#4338CA;border-color:#C7D2FE}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const {useState,useEffect,useMemo,useCallback,useRef}=React;
+const API_URL="https://script.google.com/macros/s/AKfycbyOkYczSkdQffjXoBRKOYkkTLUB_3xoDTU3JxOB_RHf1BiTAmKX28_LNUykOqum1MyR/exec";
+const LS_KEY="hr_v15";
+const GTMPL_KEY="hr_v15_gtmpl";
+const ROUTINE_KEY="hr_v15_routines";
+const TODAY=new Date();
+const todayStr=TODAY.toISOString().split('T')[0];
+const KOR_M=["1월","2월","3월","4월","5월","6월","7월","8월","9월","10월","11월","12월"];
+const MOVE_TYPES=["입사","퇴사","육아휴직","육아기간 단축근로","출산휴가","복직"];
+const ALL_STATUSES=["입사","퇴사","복직","육아휴직","출산휴가","육아기간 단축근로"];
+const DEPTS=["HQ","PA","MT","MS","EN","CC(EN)","CC(DW)","개발팀"];
+const CYCLE_OPTS=["월간","분기별","반기별","연간","일회성"];
+const CYCLE_CLR={"월간":"#0EA5E9","분기별":"#8B5CF6","반기별":"#6366F1","연간":"#EC4899","일회성":"#64748B"};
+const uid=()=>`id_${Date.now()}_${Math.random().toString(36).slice(2,6)}`;
+const fmt=d=>{const dt=d instanceof Date?d:new Date(d);return`${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,"0")}-${String(dt.getDate()).padStart(2,"0")}`};
+const addD=(d,n)=>{const r=new Date(d);r.setDate(r.getDate()+n);return r};
+const nxtM15=d=>{const r=new Date(d);r.setMonth(r.getMonth()+1,15);return r};
+const dday=d=>{const n=Math.ceil((new Date(d)-TODAY)/86400000);return n===0?"D-Day":n>0?`D-${n}`:`D+${Math.abs(n)}`};
+const nowIso=()=>new Date().toISOString();
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   SheetDB — 구글 스프레드시트(Apps Script Web App) 공유 저장 레이어
+   ────────────────────────────────────────────────────────────────────────────
+   · boot()            : 앱 시작 시 GET ?action=getState 로 전체 데이터를 한 번에 로드
+   · setCollection()   : 변경분을 debounce 후 POST(action:"replace")로 시트에 저장 (optimistic)
+   · refresh()         : 다른 사람이 바꾼 내용을 다시 GET 으로 당겨옴 (포커스/주기적 동기화)
+   · onStatus()        : 저장/로딩 상태를 구독 → 상단바 동기화 배지·토스트 표시
+   localStorage 는 "오프라인 캐시"로만 사용 (시트 연결 실패 시 폴백).
+   ═══════════════════════════════════════════════════════════════════════════ */
+const SheetDB=(function(){
+  const MIRROR="hr_shine_cloud_mirror_v2";
+  const STORE={team:null,employees:null,tasks:null,ts:null,routines:null,memos:null,
+    gTmpl:null,guide:null,adminName:null,cl:{},ins:{}};
+  let ready=false, pending=0, status="idle";
+  const listeners=new Set();
+  const emit=s=>{status=s;listeners.forEach(fn=>{try{fn(s)}catch(e){}})};
+  const readMirror=()=>{try{const s=localStorage.getItem(MIRROR);return s?JSON.parse(s):null}catch{return null}};
+  const writeMirror=()=>{try{localStorage.setItem(MIRROR,JSON.stringify(STORE))}catch(e){}};
+  function applyState(d){
+    if(!d||typeof d!=="object")return;
+    ["team","employees","tasks","routines","memos"].forEach(k=>{if(Array.isArray(d[k]))STORE[k]=d[k];});
+    ["ts","gTmpl"].forEach(k=>{if(d[k]&&typeof d[k]==="object"&&!Array.isArray(d[k]))STORE[k]=d[k];});
+    if(typeof d.guide==="string")STORE.guide=d.guide;
+    if(typeof d.adminName==="string"&&d.adminName)STORE.adminName=d.adminName;
+    if(d.cl&&typeof d.cl==="object")STORE.cl=d.cl;
+    if(d.ins&&typeof d.ins==="object")STORE.ins=d.ins;
+  }
+  async function boot(){
+    emit("loading");
+    const mir=readMirror(); if(mir)applyState(mir); // 즉시 오프라인 캐시로 시작
+    try{
+      const res=await fetch(API_URL+"?action=getState&t="+Date.now());
+      if(!res.ok)throw new Error("HTTP "+res.status);
+      const data=await res.json();
+      applyState(data); writeMirror();
+      ready=true; emit("saved"); return true;
+    }catch(e){
+      ready=true; emit(mir?"offline":"error"); return false; // 연결 실패해도 로컬로 동작
+    }
+  }
+  const timers={};
+  function schedulePush(payload,key){
+    pending++; emit("saving");
+    if(timers[key])clearTimeout(timers[key]);
+    timers[key]=setTimeout(async()=>{
+      try{
+        await fetch(API_URL,{method:"POST",mode:"no-cors",
+          headers:{"Content-Type":"text/plain;charset=utf-8"},
+          body:JSON.stringify(payload)});
+        pending=Math.max(0,pending-1);
+        if(pending===0)emit("saved");
+      }catch(e){pending=Math.max(0,pending-1);emit("error");}
+    },450);
+  }
+  function setCollection(collection,value){
+    if(collection.indexOf("cl:")===0){STORE.cl[collection.slice(3)]=value;}
+    else if(collection.indexOf("ins:")===0){const ym=collection.slice(4);if(value===null)delete STORE.ins[ym];else STORE.ins[ym]=value;}
+    else {STORE[collection]=value;}
+    writeMirror();
+    if(!ready)return;            // ⚠ 부트 완료 전에는 절대 push 금지 (빈 데이터로 시트를 덮어쓰는 사고 방지)
+    schedulePush({action:"replace",collection,value},collection);
+  }
+  async function refresh(){
+    try{
+      const res=await fetch(API_URL+"?action=getState&t="+Date.now());
+      if(!res.ok)throw new Error();
+      const data=await res.json(); applyState(data); writeMirror();
+      if(status!=="saving"&&pending===0)emit("saved");
+      return data;
+    }catch(e){return null;}
+  }
+  return {boot,refresh,setCollection,
+    onStatus:fn=>{listeners.add(fn);fn(status);return()=>listeners.delete(fn);},
+    get:k=>STORE[k], getCL:key=>STORE.cl[key], getIns:ym=>STORE.ins[ym],
+    isReady:()=>ready, pending:()=>pending, status:()=>status, STORE};
+})();
+
+/* 기존 localStorage 헬퍼 → SheetDB 캐시 기반으로 전환 (호출부는 그대로 유지) */
+const lsGet=()=>({team:SheetDB.get("team"),employees:SheetDB.get("employees"),
+  tasks:SheetDB.get("tasks"),ts:SheetDB.get("ts"),adminName:SheetDB.get("adminName")});
+const lsSave=s=>{}; // App 에서 컬렉션별로 SheetDB.setCollection 을 직접 호출하므로 no-op
+
+/* 마운트 직후(=클라우드에서 막 로드한 값)에는 저장을 건너뛰고,
+   사용자가 실제로 바꿨을 때만 시트에 push 하기 위한 훅 */
+function useSkipFirstEffect(fn,deps){
+  const first=useRef(true);
+  useEffect(()=>{
+    if(first.current){first.current=false;return;}
+    return fn();
+  },deps);
+}
+const fmtAmt=v=>{if(v===null||v===undefined||String(v).trim()==="")return"—";const n=Number(String(v).replace(/,/g,"").trim());return isNaN(n)?String(v):n.toLocaleString("ko-KR")};
+const fmtCell=v=>{
+  if(v===null||v===undefined||String(v).trim()==="")return"—";
+  const s=String(v).trim();
+  // Detect JS Date toString() format: starts with 3-letter weekday
+  if(/^(Sun|Mon|Tue|Wed|Thu|Fri|Sat)\s/.test(s)){
+    const d=new Date(s);
+    if(!isNaN(d.getTime()))return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+  }
+  // Detect ISO timestamp like 2026-05-10T00:00:00.000Z
+  if(/^\d{4}-\d{2}-\d{2}T/.test(s)){
+    return s.slice(0,10);
+  }
+  return s;
+};
+const clKey=(m,t,tp)=>`cl__${(m||"x").replace(/\s/g,"_")}__${(t||"x").replace(/\s/g,"_")}__${(tp||"x").replace(/\s/g,"_")}`;
+
+const DEF_SUBS={"입사":["4대보험 취득 신고","근로계약서 체결","월급여 일할 계산","급여 계좌 등록","시스템 계정 생성","온보딩 안내 발송"],"퇴사":["4대보험 상실 신고","퇴직금 정산","미사용 연차수당 지급","최종 급여 정산","퇴직연금 IRP 이관","사내 시스템 계정 회수"],"육아휴직":["육아휴직 개시일 등록","고용보험 육아휴직 급여 신청","4대보험 납부 유예 확인","급여 중지 처리"],"육아기간 단축근로":["단축근로 시작일 등록","고용보험 급여 지원 신청","급여 단축 계산 확인","근로계약서 변경"],"출산휴가":["출산휴가 개시 신고","건강보험 급여 신청","4대보험 납부 유예 확인","급여 처리 확인"],"복직":["4대보험 복직 처리","급여 재개 확인","근태 시스템 복직 등록","육아휴직 종료 신고"]};
+const TYPE_S={"입사":{cls:"bdg-blue",clr:"#1D4ED8",bg:"#EFF6FF"},"퇴사":{cls:"bdg-red",clr:"#DC2626",bg:"#FEF2F2"},"육아휴직":{cls:"bdg-purple",clr:"#7C3AED",bg:"#F5F3FF"},"육아기간 단축근로":{cls:"bdg-amber",clr:"#D97706",bg:"#FFFBEB"},"출산휴가":{cls:"bdg-pink",clr:"#BE185D",bg:"#FDF2F8"},"복직":{cls:"bdg-green",clr:"#16A34A",bg:"#F0FDF4"}};
+
+function loadGTmpl(){
+  const p=SheetDB.get("gTmpl");
+  if(p&&typeof p==="object"&&!Array.isArray(p))return p;
+  const r={};Object.keys(DEF_SUBS).forEach(k=>{r[k]=DEF_SUBS[k].map(t=>({id:`g_${k.slice(0,3)}_${t.slice(0,8).replace(/\s/g,"_")}`,text:t}))});return r;
+}
+function saveGTmpl(t){SheetDB.setCollection("gTmpl",t);}
+function loadCL(mgr,tgt,tp,gTmpl){
+  const k=clKey(mgr,tgt,tp);const gI=(gTmpl&&gTmpl[tp])||[];
+  const sv=SheetDB.getCL(k);
+  if(Array.isArray(sv)){
+    const pers=sv.filter(x=>!x.isGlobal);
+    const svGIds=new Set(sv.filter(x=>x.isGlobal).map(x=>x.gid||x.id));
+    const newG=gI.filter(g=>!svGIds.has(g.id)).map(g=>({id:uid(),gid:g.id,text:g.text,done:false,isGlobal:true}));
+    const syncG=sv.filter(x=>x.isGlobal).map(x=>{const m=gI.find(g=>g.id===(x.gid||x.id));return m?{...x,text:m.text}:null}).filter(Boolean);
+    return [...pers,...syncG,...newG];
+  }
+  const defs=DEF_SUBS[tp]||[];const gTxts=new Set(gI.map(g=>g.text));
+  return [...gI.map(g=>({id:uid(),gid:g.id,text:g.text,done:false,isGlobal:true})),...defs.filter(t=>!gTxts.has(t)).map(t=>({id:uid(),text:t,done:false,isGlobal:false}))];
+}
+function saveCL(mgr,tgt,tp,items){SheetDB.setCollection("cl:"+clKey(mgr,tgt,tp),items);}
+function loadRoutines(){const r=SheetDB.get("routines");return Array.isArray(r)?r:[];}
+function saveRoutines(r){SheetDB.setCollection("routines",r||[]);}
+
+const DEF_TEAM=[{id:"T1",name:"박혜연",role:"HR 매니저",color:"#6366F1"},{id:"T2",name:"김희진",role:"급여 담당",color:"#0EA5E9"},{id:"T3",name:"황선혜",role:"인사 담당",color:"#10B981"},{id:"T4",name:"신하늬",role:"온보딩 담당",color:"#F59E0B"}];
+
+function genEmpTasks(emp){
+  if(emp.type==="입사")return[
+    {id:uid(),empId:emp.id,name:emp.name,dept:emp.dept,task:"4대보험 취득신고",due:fmt(nxtM15(emp.date)),category:"입사",urgent:true,asgn:"T3",legal:true,note:""},
+    {id:uid(),empId:emp.id,name:emp.name,dept:emp.dept,task:"근로계약서 체결",due:fmt(addD(emp.date,3)),category:"입사",urgent:false,asgn:"T4",legal:false,note:""},
+    {id:uid(),empId:emp.id,name:emp.name,dept:emp.dept,task:"급여 계좌 등록",due:fmt(addD(emp.date,5)),category:"입사",urgent:false,asgn:"T2",legal:false,note:""},
+    {id:uid(),empId:emp.id,name:emp.name,dept:emp.dept,task:"온보딩 시스템 등록",due:fmt(addD(emp.date,1)),category:"입사",urgent:false,asgn:"T4",legal:false,note:""},
+  ];
+  return[
+    {id:uid(),empId:emp.id,name:emp.name,dept:emp.dept,task:"4대보험 상실신고",due:fmt(addD(emp.date,14)),category:"퇴사",urgent:true,asgn:"T3",legal:true,note:""},
+    {id:uid(),empId:emp.id,name:emp.name,dept:emp.dept,task:"퇴직금 정산",due:fmt(addD(emp.date,14)),category:"퇴사",urgent:true,asgn:"T2",legal:true,note:emp.note||""},
+    {id:uid(),empId:emp.id,name:emp.name,dept:emp.dept,task:"최종 급여 정산",due:fmt(addD(emp.date,30)),category:"퇴사",urgent:false,asgn:"T2",legal:false,note:""},
+    {id:uid(),empId:emp.id,name:emp.name,dept:emp.dept,task:"퇴직연금 IRP 이관",due:fmt(addD(emp.date,30)),category:"퇴사",urgent:false,asgn:"T1",legal:false,note:""},
+  ];
+}
+
+function expandRoutine(routine,existing,team){
+  const {id:rId,task,cycle,startDate,day,assignees,legal}=routine;
+  const start=new Date(startDate||todayStr);
+  const horizon=new Date(TODAY);horizon.setMonth(horizon.getMonth()+36);
+  const hStart=new Date(TODAY);hStart.setMonth(hStart.getMonth()-24);
+  let mi=1;
+  if(cycle==="분기별")mi=3;
+  else if(cycle==="반기별")mi=6;
+  else if(cycle==="연간")mi=12;
+  else if(cycle==="일회성")mi=null;
+  const exKeys=new Set((existing||[]).filter(t=>t.routineId===rId).map(t=>t.routineKey));
+  const res=[];
+  const tIds=assignees==="all"?(team||[]).map(m=>m.id):(Array.isArray(assignees)?assignees:[]);
+  const addDate=dt=>{
+    const due=fmt(dt);
+    tIds.forEach(mid=>{
+      const k=`${rId}_${due}_${mid}`;
+      if(exKeys.has(k))return;
+      res.push({id:uid(),task,due,category:cycle,urgent:!!legal,legal:!!legal,asgn:mid,note:cycle+" 정기 일정",empId:null,name:"",dept:"",routineId:rId,routineKey:k,isRoutine:true});
+    });
+  };
+  if(mi===null){
+    const d=new Date(start.getFullYear(),start.getMonth(),day||1);
+    if(d>=start&&d<=horizon)addDate(d);
+  }else{
+    const es=new Date(Math.max(start.getTime(),hStart.getTime()));
+    let cur=new Date(es.getFullYear(),es.getMonth(),1);
+    while(cur<=horizon){
+      const dim=new Date(cur.getFullYear(),cur.getMonth()+1,0).getDate();
+      const ad=Math.min(day||1,dim);
+      const occ=new Date(cur.getFullYear(),cur.getMonth(),ad);
+      if(occ>=start&&occ>=hStart&&occ<=horizon)addDate(occ);
+      cur.setMonth(cur.getMonth()+mi);
+    }
+  }
+  return res;
+}
+
+// ── Atoms ─────────────────────────────────────────────────────────────────────
+function Av({name,color,size}){
+  color=color||"#0EA5E9";size=size||28;
+  const s={width:size,height:size,borderRadius:size>=32?9:"50%",background:color+"18",border:"1.5px solid "+color+"40",color,display:"flex",alignItems:"center",justifyContent:"center",fontSize:size>=32?13:10,fontWeight:800,flexShrink:0};
+  return <div style={s}>{(name||"?")[0]}</div>;
+}
+function PBar({pct,color,h}){
+  h=h||6;
+  return <div className="pbar" style={{height:h}}><div className="pbar-fill" style={{width:pct+"%",background:color?"linear-gradient(90deg,"+color+"cc,"+color+")":undefined}}/></div>;
+}
+function Chk({checked,onChange,color,disabled}){
+  color=color||"#0EA5E9";disabled=!!disabled;
+  return <button onClick={()=>{if(!disabled)onChange()}} style={{width:15,height:15,borderRadius:4,border:"1.5px solid "+(disabled?"#CBD5E1":checked?color:"#CBD5E1"),background:disabled?"transparent":checked?color:"transparent",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,cursor:disabled?"not-allowed":"pointer",opacity:disabled?0.5:1,transition:"all .12s"}}>
+    {checked&&<svg width="9" height="9" viewBox="0 0 10 10" fill="none"><path d="M2 5l2.5 2.5 4-4" stroke="white" strokeWidth="1.8" strokeLinecap="round"/></svg>}
+  </button>;
+}
+function DelBtn({onClick}){
+  const[h,setH]=useState(false);
+  return <button onClick={onClick} onMouseEnter={()=>setH(true)} onMouseLeave={()=>setH(false)} style={{width:20,height:20,borderRadius:5,display:"flex",alignItems:"center",justifyContent:"center",border:"none",background:h?"#FEF2F2":"transparent",color:h?"#EF4444":"#CBD5E1",cursor:"pointer",flexShrink:0}}>
+    <svg width="10" height="10" viewBox="0 0 14 14" fill="none"><path d="M2 4h10M5 4V2.5a.5.5 0 01.5-.5h3a.5.5 0 01.5.5V4M5.5 6.5v4M8.5 6.5v4M3 4l.8 7.2a1 1 0 001 .8h4.4a1 1 0 001-.8L11 4" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/></svg>
+  </button>;
+}
+function Toast({msg,onDone}){
+  useEffect(()=>{const t=setTimeout(onDone,2800);return()=>clearTimeout(t)},[]);
+  return <div className="toast">{msg}</div>;
+}
+function Modal({title,sub,onClose,wide,children}){
+  return <div className="modal-ov" onClick={onClose}>
+    <div className="modal-box fadein" style={{width:wide?"min(680px,96vw)":"360px"}} onClick={e=>e.stopPropagation()}>
+      <div className="modal-hd">
+        <div><div className="modal-title">{title}</div>{sub&&<div className="modal-sub">{sub}</div>}</div>
+        <button onClick={onClose} style={{width:28,height:28,borderRadius:8,border:"1px solid var(--border2)",background:"var(--sky-l)",color:"var(--t2)",cursor:"pointer",fontSize:14,display:"flex",alignItems:"center",justifyContent:"center"}}>X</button>
+      </div>
+      <div className="modal-body">{children}</div>
+    </div>
+  </div>;
+}
+function FR({label,children}){return <div style={{marginBottom:12}}><div className="inp-lbl">{label}</div>{children}</div>}
+
+// ── ChecklistPanel ─────────────────────────────────────────────────────────────
+function ChecklistPanel({row,managerName,onClose,gTmpl,setGTmpl}){
+  const target=String(row.targetName||row.name||"");
+  const mtype=String(row.isReflected||row.type||"");
+  const mgr=String(managerName||"");
+  const ts2=TYPE_S[mtype]||{clr:"#0EA5E9",cls:"bdg-sky"};
+  const[items,setItems]=useState(()=>loadCL(mgr,target,mtype,gTmpl));
+  const[newText,setNewText]=useState("");
+  const pRef=useRef(null);
+  const done=items.filter(x=>x.done).length;
+  const pct=items.length?Math.round(done/items.length*100):0;
+  useSkipFirstEffect(()=>{saveCL(mgr,target,mtype,items)},[items]);
+  useEffect(()=>{
+    const cur=(gTmpl&&gTmpl[mtype])||[];
+    const curIds=new Set(cur.map(g=>g.id));
+    const cleaned=items.filter(x=>!x.isGlobal||curIds.has(x.gid||x.id));
+    const exIds=new Set(cleaned.filter(x=>x.isGlobal).map(x=>x.gid||x.id));
+    const toAdd=cur.filter(g=>!exIds.has(g.id)).map(g=>({id:uid(),gid:g.id,text:g.text,done:false,isGlobal:true}));
+    const synced=cleaned.map(x=>{if(!x.isGlobal)return x;const m=cur.find(g=>g.id===(x.gid||x.id));return m?{...x,text:m.text}:x});
+    const next=[...synced,...toAdd];
+    if(JSON.stringify(next)!==JSON.stringify(items))setItems(next);
+  },[gTmpl,mtype]);
+  function toggleItem(id){setItems(p=>p.map(x=>x.id===id?{...x,done:!x.done}:x))}
+  function addPersonal(){const t=newText.trim();if(!t)return;setItems(p=>[...p,{id:uid(),text:t,done:false,isGlobal:false}]);setNewText("");if(pRef.current)pRef.current.focus()}
+  function delPersonal(id){setItems(p=>p.filter(x=>x.id!==id))}
+  const persItems=items.filter(x=>!x.isGlobal);
+  const globItems=items.filter(x=>x.isGlobal);
+  return <div className="cl-panel">
+    <div className="cl-panel-hd">
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:8}}>
+        <div>
+          <div style={{fontSize:13,fontWeight:800,color:"var(--sky-deep)",marginBottom:4}}>{target}</div>
+          <div style={{display:"flex",alignItems:"center",gap:5}}>
+            <span className={"badge "+(ts2.cls||"bdg-gray")} style={{fontSize:9.5,padding:"1px 6px"}}>{mtype}</span>
+            {mgr&&<span style={{fontSize:10,color:"var(--t3)"}}>{"담당: "+mgr}</span>}
+          </div>
+        </div>
+        <button onClick={onClose} style={{width:22,height:22,borderRadius:6,border:"1px solid var(--border2)",background:"#fff",cursor:"pointer",color:"var(--t3)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:12}}>X</button>
+      </div>
+      <div style={{display:"flex",justifyContent:"space-between",fontSize:10,color:"var(--t3)",marginBottom:5}}>
+        <span>{done+"/"+items.length+" 완료"}</span>
+        <div style={{display:"flex",alignItems:"center",gap:5}}>
+          {items.length>0&&pct===100&&<span style={{fontSize:9,padding:"1px 7px",borderRadius:10,background:"#F0FDF4",color:"#16A34A",border:"1px solid #BBF7D0",fontWeight:700}}>전체 완료</span>}
+          {items.length>0&&pct<100&&pct>0&&<span style={{fontSize:9,padding:"1px 7px",borderRadius:10,background:"#FFFBEB",color:"#D97706",border:"1px solid #FDE68A",fontWeight:700}}>진행 중</span>}
+          {items.length>0&&pct===0&&<span style={{fontSize:9,padding:"1px 7px",borderRadius:10,background:"#F8FAFC",color:"#94A3B8",border:"1px solid var(--border2)",fontWeight:700}}>미완료</span>}
+          <span style={{fontWeight:700,color:ts2.clr}}>{pct+"%"}</span>
+        </div>
+      </div>
+      <PBar pct={pct} color={ts2.clr} h={5}/>
+    </div>
+    <div className="cl-panel-body">
+      <div style={{display:"flex",gap:5,marginBottom:10}}>
+        <input ref={pRef} className="inp" style={{fontSize:11,padding:"6px 8px"}} placeholder="개인 항목 추가 후 Enter" value={newText} onChange={e=>setNewText(e.target.value)} onKeyDown={e=>e.key==="Enter"&&addPersonal()}/>
+        <button onClick={addPersonal} style={{flexShrink:0,padding:"6px 10px",borderRadius:7,border:"none",background:"var(--sky-d)",color:"#fff",cursor:"pointer",fontSize:13,fontWeight:700,fontFamily:"inherit"}}>+</button>
+      </div>
+      {globItems.length>0&&<div style={{marginBottom:8}}>
+        <div style={{fontSize:9.5,fontWeight:700,color:ts2.clr,textTransform:"uppercase",letterSpacing:".06em",marginBottom:5}}>{"공통 루틴 ("+globItems.length+"개)"}</div>
+        {globItems.map(item=><div key={item.id} className={"cl-item"+(item.done?" done-item":"")} style={{borderColor:item.done?"#BBF7D0":ts2.clr+"30",background:item.done?"#F0FDF4":ts2.clr+"05"}}>
+          <Chk checked={item.done} onChange={()=>toggleItem(item.id)} color={ts2.clr}/>
+          <span style={{flex:1,fontSize:11,color:item.done?"var(--t3)":"var(--text)",textDecoration:item.done?"line-through":"none"}}>{item.text}</span>
+          <span style={{fontSize:9,padding:"1px 5px",borderRadius:10,background:ts2.clr+"18",color:ts2.clr,fontWeight:700}}>공통</span>
+        </div>)}
+      </div>}
+      {persItems.length>0&&<div>
+        <div style={{fontSize:9.5,fontWeight:700,color:"var(--t3)",textTransform:"uppercase",letterSpacing:".06em",marginBottom:5}}>{"개인 항목 ("+persItems.length+"개)"}</div>
+        {persItems.map(item=><div key={item.id} className={"cl-item"+(item.done?" done-item":"")}>
+          <Chk checked={item.done} onChange={()=>toggleItem(item.id)} color="var(--sky-d)"/>
+          <span style={{flex:1,fontSize:11,color:item.done?"var(--t3)":"var(--text)",textDecoration:item.done?"line-through":"none"}}>{item.text}</span>
+          <DelBtn onClick={()=>delPersonal(item.id)}/>
+        </div>)}
+      </div>}
+      {items.length===0&&<div style={{textAlign:"center",color:"var(--t3)",fontSize:11,padding:"20px 0"}}>항목을 추가해주세요</div>}
+      <div style={{marginTop:12,padding:"7px 10px",borderRadius:8,background:"var(--sky-l)",border:"1px solid var(--sky-m)",fontSize:9,color:"var(--t3)",fontFamily:"'DM Mono',monospace",wordBreak:"break-all"}}>{clKey(mgr,target,mtype)}</div>
+    </div>
+  </div>;
+}
+
+// ── BigCal ─────────────────────────────────────────────────────────────────────
+function BigCal({tasks,ts,team,calYear,calMonth,onNav,onAddCal,onToggle,selectedDate,onSelectDate}){
+  const[selDay,setSelDay]=useState(()=>{
+    if(selectedDate){const d=new Date(selectedDate);if(d.getFullYear()===calYear&&d.getMonth()===calMonth)return d.getDate();}
+    return TODAY.getDate();
+  });
+  const[selAsgn,setSelAsgn]=useState(null);
+  const last=new Date(calYear,calMonth+1,0).getDate();
+  const startDow=new Date(calYear,calMonth,1).getDay();
+  const evMap=useMemo(()=>{
+    const m={};(tasks||[]).forEach(t=>{if(!t.due)return;const d=new Date(t.due);if(d.getFullYear()===calYear&&d.getMonth()===calMonth){const k=d.getDate();if(!m[k])m[k]=[];m[k].push(t)}});return m;
+  },[tasks,calYear,calMonth]);
+  const selEvs=evMap[selDay]||[];
+  const asgnList=useMemo(()=>[...new Set(selEvs.map(t=>t.asgn||"미지정"))]  ,[selEvs]);
+  useEffect(()=>{if(selAsgn&&!asgnList.includes(selAsgn))setSelAsgn(null)},[asgnList]);
+  const rname=id=>{const m=(team||[]).find(x=>x.id===id);return m?m.name:id||"미지정"};
+  const days=[];for(let i=0;i<startDow;i++)days.push(null);for(let d=1;d<=last;d++)days.push(d);
+  const isTod=d=>d&&calYear===TODAY.getFullYear()&&calMonth===TODAY.getMonth()&&d===TODAY.getDate();
+  const isSelDate=d=>d&&selectedDate===fmt(new Date(calYear,calMonth,d));
+  return <div style={{display:"flex",gap:12}}>
+    <div className="card" style={{flex:1,marginBottom:0}}>
+      <div className="card-hd">
+        <div className="card-title">
+          <div className="card-icon"><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><rect x="1" y="2" width="14" height="12" rx="2" stroke="#0EA5E9" strokeWidth="1.3"/><path d="M5 1v3M11 1v3M1 7h14" stroke="#0EA5E9" strokeWidth="1.2" strokeLinecap="round"/></svg></div>
+          {KOR_M[calMonth]+" "+calYear}
+        </div>
+        <div style={{display:"flex",gap:6}}>
+          <button className="btn btn-ghost btn-sm" onClick={()=>onNav(-1)}>&#8249;</button>
+          <button className="btn btn-ghost btn-sm" onClick={()=>onNav(1)}>&#8250;</button>
+        </div>
+      </div>
+      <div className="card-body">
+        <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:2,marginBottom:4}}>
+          {["일","월","화","수","목","금","토"].map(d=><div key={d} style={{fontSize:10,fontWeight:700,color:"var(--t3)",textAlign:"center",padding:"3px 0"}}>{d}</div>)}
+        </div>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:2}}>
+          {days.map((d,i)=>{
+            const isSel=d&&d===selDay;const isTd=isTod(d);const isSd=isSelDate(d)&&!isSel;const hasEv=d&&(evMap[d]||[]).length>0;
+            let cls="cal-cell";if(isSel)cls+=" active";else if(isTd||isSd)cls+=" today";if(hasEv)cls+=" has-ev";
+            return <div key={i} className={cls} onClick={()=>{if(!d)return;setSelDay(d);setSelAsgn(null);if(onSelectDate)onSelectDate(fmt(new Date(calYear,calMonth,d)))}}>
+              {d&&<span style={{fontSize:11,fontWeight:700,color:isSel?"#fff":isTd?"var(--sky-d)":"var(--t2)"}}>{d}</span>}
+              {d&&(evMap[d]||[]).slice(0,2).map((e,j)=><div key={j} style={{fontSize:9,borderRadius:3,padding:"1px 3px",marginTop:2,overflow:"hidden",whiteSpace:"nowrap",textOverflow:"ellipsis",background:isSel?"rgba(255,255,255,.2)":e.legal?"#FEF2F2":"var(--sky-l)",color:isSel?"#fff":e.legal?"#DC2626":"var(--sky-d)",fontWeight:600}}>{e.task.slice(0,6)}</div>)}
+              {d&&(evMap[d]||[]).length>2&&<div style={{fontSize:9,color:"var(--t3)",marginTop:1}}>{"+"+(evMap[d].length-2)}</div>}
+            </div>;
+          })}
+        </div>
+      </div>
+    </div>
+    <div className="card" style={{width:248,flexShrink:0,marginBottom:0,display:"flex",flexDirection:"column"}}>
+      <div className="card-hd" style={{flexShrink:0}}>
+        <div>
+          <div style={{fontSize:12,fontWeight:800,color:"var(--sky-deep)"}}>{calYear+". "+(calMonth+1)+". "+selDay}</div>
+          <div style={{fontSize:10,color:"var(--t3)",marginTop:1}}>{asgnList.length+"명 · "+selEvs.length+"개"}</div>
+        </div>
+        <button className="btn btn-primary btn-sm" onClick={()=>onAddCal(fmt(new Date(calYear,calMonth,selDay)))}>+ 추가</button>
+      </div>
+      <div style={{flex:1,overflowY:"auto"}}>
+        <div style={{padding:"10px 14px",borderBottom:"1px solid var(--border)"}}>
+          {asgnList.length===0?<div style={{textAlign:"center",padding:"16px 0",color:"var(--t3)",fontSize:11}}>등록된 업무 없음</div>:
+          <div>
+            <div style={{fontSize:10,fontWeight:700,color:"var(--t3)",textTransform:"uppercase",letterSpacing:".06em",marginBottom:7}}>담당자</div>
+            {asgnList.map(a=>{const isA=selAsgn===a;const m=(team||[]).find(x=>x.id===a);const nm=m?m.name:a;const clr=m?m.color:"#0EA5E9";const cnt=selEvs.filter(t=>(t.asgn||"미지정")===a).length;
+              return <button key={a} onClick={()=>setSelAsgn(a)} style={{width:"100%",display:"flex",alignItems:"center",justifyContent:"space-between",padding:"7px 10px",borderRadius:8,border:"1.5px solid "+(isA?clr:"var(--border2)"),background:isA?clr+"12":"#fff",cursor:"pointer",fontFamily:"inherit",marginBottom:5}}>
+                <div style={{display:"flex",alignItems:"center",gap:6}}><Av name={nm} color={clr} size={20}/><span style={{fontSize:11,fontWeight:700,color:isA?clr:"var(--text)"}}>{nm}</span></div>
+                <span style={{fontSize:10,color:"var(--t3)"}}>{cnt+"개"}</span>
+              </button>;
+            })}
+          </div>}
+        </div>
+        <div style={{padding:"10px 14px"}}>
+          {!selAsgn?<div style={{fontSize:11,color:"var(--t3)"}}>담당자를 선택하세요</div>:
+          <div>
+            <div style={{fontSize:11,fontWeight:700,color:"var(--sky-deep)",marginBottom:8}}>{rname(selAsgn)+" To-Do"}</div>
+            {selEvs.filter(t=>(t.asgn||"미지정")===selAsgn).map(t=>{
+              const isDone=ts[t.id]==="completed";
+              return <div key={t.id} style={{padding:"8px 10px",borderRadius:9,border:"1px solid var(--border)",background:isDone?"#F0FDF4":"var(--s2)",marginBottom:6}}>
+                <div style={{display:"flex",alignItems:"flex-start",gap:8}}>
+                  <Chk checked={isDone} onChange={()=>onToggle(t.id)} color="#0EA5E9"/>
+                  <div style={{flex:1,minWidth:0}}>
+                    <div style={{fontSize:11,fontWeight:600,color:isDone?"var(--t3)":"var(--text)",textDecoration:isDone?"line-through":"none"}}>{t.task}</div>
+                    <div style={{fontSize:9.5,color:"var(--t3)",marginTop:2}}>{(t.legal?"법정":"일반")+(t.note?" · "+t.note:"")}</div>
+                  </div>
+                </div>
+              </div>;
+            })}
+          </div>}
+        </div>
+      </div>
+    </div>
+  </div>;
+}
+
+// ── SummaryBar ─────────────────────────────────────────────────────────────────
+function SummaryBar({employees,tasks,ts,apiRows,selectedDate,calYear,calMonth}){
+  // Dynamic monthly context: use calYear/calMonth for month-specific filtering
+  const moStr=calYear+"-"+String(calMonth+1).padStart(2,"0");
+
+  // Monthly joiners/leavers from local employees list (date field, YYYY-MM prefix)
+  const empJoiners=(employees||[]).filter(e=>e.type==="입사"&&String(e.date||"").startsWith(moStr)).length;
+  const empLeavers=(employees||[]).filter(e=>e.type==="퇴사"&&String(e.date||"").startsWith(moStr)).length;
+  // API rows: match 급여반영월 (reflectMonth) against calYear/calMonth,
+  // supporting formats: "2026.05", "2026.05 반영", "2026.05반영", "2026-05", "2026/05", "2026년 5월"
+  const yr=String(calYear);
+  const mo2=String(calMonth+1).padStart(2,"0");  // "05"
+  const moNum=String(calMonth+1);               // "5"
+  function matchesMonth(rm){
+    const s=String(rm||"").trim();
+    if(!s)return false;
+    // Dot-separated: 2026.05 or 2026.05 반영 or 2026.05반영
+    if(s.startsWith(yr+"."+mo2))return true;
+    // Dash-separated: 2026-05
+    if(s.startsWith(yr+"-"+mo2))return true;
+    // Slash-separated: 2026/05
+    if(s.startsWith(yr+"/"+mo2))return true;
+    // Korean: 2026년 5월 or 2026년 05월
+    if(s===yr+"년 "+moNum+"월"||s===yr+"년 "+mo2+"월")return true;
+    return false;
+  }
+  const apiMonthRows=(apiRows||[]).filter(r=>matchesMonth(r.reflectMonth));
+  // 구분(isReflected) must be exactly "입사" or "퇴사"
+  const apiJoiners=apiMonthRows.filter(r=>String(r.isReflected||"").trim()==="입사").length;
+  const apiLeavers=apiMonthRows.filter(r=>String(r.isReflected||"").trim()==="퇴사").length;
+  const joiners=empJoiners+apiJoiners;
+  const leavers=empLeavers+apiLeavers;
+
+  // Urgency: tasks due within 7 days
+  const urgent=(tasks||[]).filter(t=>t.urgent&&ts[t.id]!=="completed");
+  const thisWeek=urgent.filter(t=>Math.ceil((new Date(t.due)-TODAY)/86400000)<=7);
+
+  // Daily progress
+  const dayTasks=(tasks||[]).filter(t=>t.due===selectedDate);
+  const dayDone=dayTasks.filter(t=>ts[t.id]==="completed").length;
+  const dayPct=dayTasks.length?Math.round(dayDone/dayTasks.length*100):0;
+
+  // Monthly progress: all tasks whose due date falls within current calendar month
+  const monthTasks=(tasks||[]).filter(t=>t.due&&String(t.due).startsWith(moStr));
+  const monthDone=monthTasks.filter(t=>ts[t.id]==="completed").length;
+  const monthPct=monthTasks.length?Math.round(monthDone/monthTasks.length*100):0;
+  const monthLabel=KOR_M[calMonth]+" "+calYear;
+
+  return <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr 1fr",gap:12,marginBottom:14}}>
+    <div className="stat-card">
+      <div className="stat-label">{monthLabel+" 입퇴사"}</div>
+      <div style={{display:"flex",alignItems:"center",gap:10}}>
+        <div style={{textAlign:"center"}}><div className="stat-value" style={{color:"#1D4ED8",fontSize:20}}>{"+"+joiners}</div><div className="stat-sub">입사</div></div>
+        <div style={{width:1,height:32,background:"var(--border2)"}}/>
+        <div style={{textAlign:"center"}}><div className="stat-value" style={{color:"#DC2626",fontSize:20}}>{"-"+leavers}</div><div className="stat-sub">퇴사</div></div>
+        <div style={{width:1,height:32,background:"var(--border2)"}}/>
+        <div style={{textAlign:"center"}}><div className="stat-sub">순증</div><div className="stat-value" style={{color:joiners-leavers>=0?"#16A34A":"#DC2626",fontSize:20}}>{(joiners-leavers>=0?"+":"")+String(joiners-leavers)}</div></div>
+      </div>
+    </div>
+    <div className="stat-card" style={{borderTopColor:thisWeek.length>0?"#EF4444":"var(--sky)"}}>
+      <div className="stat-label" style={{color:thisWeek.length>0?"#DC2626":"var(--t3)"}}>긴급 마감</div>
+      <div style={{display:"flex",alignItems:"center",gap:12}}>
+        <div className="stat-value" style={{color:thisWeek.length>0?"#EF4444":"var(--t3)",fontSize:30}}>{thisWeek.length}</div>
+        <div><div className="stat-sub">건 이번 주 마감</div>{thisWeek.slice(0,2).map(t=><div key={t.id} style={{fontSize:10,color:"#DC2626",marginTop:2}}>{dday(t.due)+" · "+t.task}</div>)}</div>
+      </div>
+    </div>
+    <div className="stat-card" style={{borderTopColor:"#8B5CF6"}}>
+      <div className="stat-label" style={{color:"#8B5CF6"}}>당일 진행률</div>
+      <div style={{display:"flex",alignItems:"flex-end",gap:8,marginBottom:8}}>
+        <div className="stat-value" style={{color:"#8B5CF6",fontSize:30}}>{dayPct+"%"}</div>
+        <div className="stat-sub" style={{marginBottom:3}}>{dayDone+"/"+dayTasks.length}</div>
+      </div>
+      <PBar pct={dayPct} color="#8B5CF6" h={6}/>
+      <div style={{display:"flex",justifyContent:"space-between",marginTop:6,fontSize:10,color:"var(--t3)"}}>
+        <span style={{color:"#8B5CF6",fontWeight:600}}>{selectedDate}</span>
+        <span>{"완료 "+dayDone+" / 미완료 "+(dayTasks.length-dayDone)}</span>
+      </div>
+    </div>
+    <div className="stat-card" style={{borderTopColor:"#0EA5E9"}}>
+      <div className="stat-label" style={{color:"var(--sky-d)"}}>월 진행률</div>
+      <div style={{display:"flex",alignItems:"flex-end",gap:8,marginBottom:8}}>
+        <div className="stat-value" style={{color:"var(--sky-d)",fontSize:30}}>{monthPct+"%"}</div>
+        <div className="stat-sub" style={{marginBottom:3}}>{monthDone+"/"+monthTasks.length}</div>
+      </div>
+      <PBar pct={monthPct} h={6}/>
+      <div style={{display:"flex",justifyContent:"space-between",marginTop:6,fontSize:10,color:"var(--t3)"}}>
+        <span style={{color:"var(--sky-d)",fontWeight:600}}>{monthLabel}</span>
+        <span>{"완료 "+monthDone+" / 미완료 "+(monthTasks.length-monthDone)}</span>
+      </div>
+    </div>
+  </div>;
+}
+
+function PageHome({employees,tasks,ts,apiRows,team,calYear,calMonth,onCalNav,onToggle,onDelete,onAddCal,selectedDate,onSelectDate}){
+  return <div className="fadein">
+    <SummaryBar employees={employees||[]} tasks={tasks||[]} ts={ts||{}} apiRows={apiRows||[]} selectedDate={selectedDate} calYear={calYear} calMonth={calMonth}/>
+    <BigCal tasks={tasks||[]} ts={ts||{}} team={team||[]} calYear={calYear} calMonth={calMonth} onNav={onCalNav} onAddCal={onAddCal} onToggle={onToggle} selectedDate={selectedDate} onSelectDate={onSelectDate}/>
+  </div>;
+}
+
+// ── Schedule / Routine Modals ──────────────────────────────────────────────────
+function AssigneePicker({team,assigneeMode,setAssigneeMode,selMem,setSelMem}){
+  function toggle(id){setSelMem(p=>p.includes(id)?p.filter(x=>x!==id):[...p,id])}
+  return <div>
+    <div style={{display:"flex",gap:6,marginBottom:8}}>
+      {[["all","전체 인원"],["selected","특정 인원 선택"]].map(([v,l])=><button key={v} onClick={()=>setAssigneeMode(v)} style={{padding:"5px 12px",borderRadius:8,fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"inherit",border:"1.5px solid "+(assigneeMode===v?"var(--sky-d)":"var(--border2)"),background:assigneeMode===v?"var(--sky-l)":"#fff",color:assigneeMode===v?"var(--sky-d)":"var(--t3)"}}>{l}</button>)}
+    </div>
+    {assigneeMode==="selected"&&<div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6}}>
+      {(team||[]).map(m=>{const isSel=selMem.includes(m.id);return <button key={m.id} onClick={()=>toggle(m.id)} style={{display:"flex",alignItems:"center",gap:8,padding:"7px 10px",borderRadius:9,border:"1.5px solid "+(isSel?m.color:"var(--border2)"),background:isSel?m.color+"12":"#fff",cursor:"pointer",fontFamily:"inherit"}}>
+        <Av name={m.name} color={m.color} size={22}/>
+        <span style={{fontSize:12,fontWeight:700,color:isSel?m.color:"var(--text)"}}>{m.name}</span>
+        <div style={{marginLeft:"auto",width:14,height:14,borderRadius:3,border:"1.5px solid "+(isSel?m.color:"#CBD5E1"),background:isSel?m.color:"transparent",display:"flex",alignItems:"center",justifyContent:"center"}}>
+          {isSel&&<svg width="9" height="9" viewBox="0 0 10 10" fill="none"><path d="M2 5l2.5 2.5 4-4" stroke="white" strokeWidth="1.8" strokeLinecap="round"/></svg>}
+        </div>
+      </button>;})}
+    </div>}
+    {assigneeMode==="all"&&<div style={{fontSize:11,color:"var(--sky-d)",background:"var(--sky-l)",borderRadius:8,padding:"7px 10px"}}>{"모든 팀원("+(team||[]).length+"명)에게 일정이 배정됩니다."}</div>}
+  </div>;
+}
+
+function ScheduleForm({team,onSubmit,onCancel,initCycle,showCancel}){
+  const[task,setTask]=useState("");
+  const[cycle,setCycle]=useState(initCycle||"일회성");
+  const[startDate,setStartDate]=useState(todayStr);
+  const[day,setDay]=useState(15);
+  const[legal,setLegal]=useState(false);
+  const[assigneeMode,setAssigneeMode]=useState("all");
+  const[selMem,setSelMem]=useState([]);
+  const[err,setErr]=useState("");
+  function submit(){
+    if(!task.trim()){setErr("일정명을 입력해주세요.");return;}
+    if(assigneeMode==="selected"&&selMem.length===0){setErr("담당자를 1명 이상 선택해주세요.");return;}
+    const assignees=assigneeMode==="all"?"all":selMem;
+    onSubmit({task:task.trim(),cycle,startDate,day:Number(day),legal,assignees});
+  }
+  return <div>
+    <FR label="일정명"><input className="inp" placeholder="예: 4대보험 취득신고" value={task} onChange={e=>setTask(e.target.value)}/></FR>
+    <FR label="반복 주기">
+      <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+        {CYCLE_OPTS.map(c=><button key={c} onClick={()=>setCycle(c)} style={{padding:"5px 12px",borderRadius:8,fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"inherit",border:"1.5px solid "+(cycle===c?(CYCLE_CLR[c]||"var(--sky)"):"var(--border2)"),background:cycle===c?(CYCLE_CLR[c]||"var(--sky)")+"15":"#fff",color:cycle===c?(CYCLE_CLR[c]||"var(--sky)"):"var(--t3)"}}>{c}</button>)}
+      </div>
+      <div style={{fontSize:10,color:"var(--t3)",marginTop:4}}>{"일회성: 1회 / 월간: 매월 / 분기별: 3개월마다 / 반기별: 6개월 / 연간: 매년"}</div>
+    </FR>
+    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+      <FR label={cycle==="일회성"?"날짜":"시작 날짜"}><input type="date" className="inp" value={startDate} onChange={e=>setStartDate(e.target.value)}/></FR>
+      {cycle!=="일회성"&&<FR label="매월 몇 일"><input type="number" className="inp" min={1} max={31} value={day} onChange={e=>setDay(e.target.value)}/></FR>}
+    </div>
+    <FR label="법정 여부">
+      <div style={{display:"flex",gap:8}}>
+        {[["false","일반"],["true","법정 (긴급)"]].map(([v,l])=><button key={v} onClick={()=>setLegal(v==="true")} style={{padding:"5px 12px",borderRadius:8,fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"inherit",border:"1.5px solid "+(String(legal)===v?"#EF4444":"var(--border2)"),background:String(legal)===v?"#FEF2F2":"#fff",color:String(legal)===v?"#EF4444":"var(--t3)"}}>{l}</button>)}
+      </div>
+    </FR>
+    <FR label="담당자 배정"><AssigneePicker team={team} assigneeMode={assigneeMode} setAssigneeMode={setAssigneeMode} selMem={selMem} setSelMem={setSelMem}/></FR>
+    {err&&<div style={{fontSize:11,color:"#DC2626",background:"#FEF2F2",border:"1px solid #FECACA",borderRadius:8,padding:"8px 12px",marginBottom:8}}>{err}</div>}
+    <div style={{display:"flex",gap:8,justifyContent:"flex-end",marginTop:14}}>
+      {showCancel&&<button className="btn btn-ghost" onClick={onCancel}>취소</button>}
+      <button className="btn btn-primary" onClick={submit}>{cycle==="일회성"?"일정 추가":"정기 일정 생성"}</button>
+    </div>
+  </div>;
+}
+
+function ScheduleModal({team,onClose,onAddSchedules}){
+  function handleSubmit(payload){
+    if(payload.cycle==="일회성"){
+      const tIds=payload.assignees==="all"?(team||[]).map(m=>m.id):(payload.assignees||[]);
+      const newTasks=tIds.map(mid=>({id:uid(),task:payload.task,due:payload.startDate,category:"일회성",urgent:!!payload.legal,legal:!!payload.legal,asgn:mid,note:"일회성 일정",empId:null,name:"",dept:"",isRoutine:false}));
+      onAddSchedules({kind:"tasks",tasks:newTasks});
+    }else{
+      onAddSchedules({kind:"routine",...payload});
+    }
+    onClose();
+  }
+  return <Modal title="일정 추가" sub="일회성 또는 정기 반복 일정을 추가합니다" onClose={onClose} wide={true}>
+    <ScheduleForm team={team} onSubmit={handleSubmit} onCancel={onClose} showCancel={true}/>
+  </Modal>;
+}
+
+function RoutineEditForm({routine,team,onSave,onCancel}){
+  const[task,setTask]=useState(routine.task||"");
+  const[cycle,setCycle]=useState(routine.cycle||"월간");
+  const[day,setDay]=useState(routine.day||15);
+  const[startDate,setStartDate]=useState(routine.startDate||todayStr);
+  const[legal,setLegal]=useState(!!routine.legal);
+  const[assigneeMode,setAssigneeMode]=useState(routine.assignees==="all"?"all":"selected");
+  const[selMem,setSelMem]=useState(()=>routine.assignees==="all"?[]:Array.isArray(routine.assignees)?routine.assignees:[]);
+  function save(){
+    if(!task.trim())return alert("일정명을 입력해주세요.");
+    if(assigneeMode==="selected"&&selMem.length===0)return alert("담당자를 1명 이상 선택해주세요.");
+    onSave({task:task.trim(),cycle,day:Number(day),startDate,legal,assignees:assigneeMode==="all"?"all":selMem});
+  }
+  return <div style={{padding:"14px 16px",borderTop:"1px solid var(--border)",background:"#FAFBFF"}}>
+    <div style={{fontSize:11,fontWeight:700,color:"var(--sky-deep)",marginBottom:10}}>정기 일정 수정</div>
+    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:8}}>
+      <div><div className="inp-lbl">일정명</div><input className="inp" style={{fontSize:11}} value={task} onChange={e=>setTask(e.target.value)}/></div>
+      <div><div className="inp-lbl">반복 주기</div>
+        <select className="inp" style={{fontSize:11}} value={cycle} onChange={e=>setCycle(e.target.value)}>
+          {CYCLE_OPTS.map(cv=><option key={cv} value={cv}>{cv}</option>)}
+        </select>
+      </div>
+      <div><div className="inp-lbl">시작 날짜</div><input type="date" className="inp" style={{fontSize:11}} value={startDate} onChange={e=>setStartDate(e.target.value)}/></div>
+      {cycle!=="일회성"&&<div><div className="inp-lbl">매월 며칠</div><input type="number" className="inp" style={{fontSize:11}} min={1} max={31} value={day} onChange={e=>setDay(e.target.value)}/></div>}
+    </div>
+    <div style={{marginBottom:8}}><div className="inp-lbl">법정 여부</div>
+      <div style={{display:"flex",gap:6}}>
+        {[["false","일반"],["true","법정"]].map(([v,l])=><button key={v} onClick={()=>setLegal(v==="true")} style={{padding:"4px 10px",borderRadius:7,fontSize:10,fontWeight:600,cursor:"pointer",fontFamily:"inherit",border:"1.5px solid "+(String(legal)===v?"#EF4444":"var(--border2)"),background:String(legal)===v?"#FEF2F2":"#fff",color:String(legal)===v?"#EF4444":"var(--t3)"}}>{l}</button>)}
+      </div>
+    </div>
+    <div style={{marginBottom:10}}><div className="inp-lbl">담당자 배정</div>
+      <AssigneePicker team={team} assigneeMode={assigneeMode} setAssigneeMode={setAssigneeMode} selMem={selMem} setSelMem={setSelMem}/>
+    </div>
+    <div style={{display:"flex",gap:6,justifyContent:"flex-end"}}>
+      <button className="btn btn-ghost btn-sm" onClick={onCancel}>취소</button>
+      <button className="btn btn-primary btn-sm" onClick={save}>수정 저장</button>
+    </div>
+  </div>;
+}
+
+function RoutineManagerModal({routines,team,onClose,onDelete,onAdd,onReset,onEdit}){
+  const[showAdd,setShowAdd]=useState(false);
+  const[editId,setEditId]=useState(null);
+  function handleDelete(r){if(confirm(r.task+" 정기 일정을 전체 삭제할까요?"))onDelete(r.id)}
+  function handleEditSave(rid,payload){onEdit(rid,payload);setEditId(null)}
+  const rts=routines||[];
+  return <Modal title="정기 일정 관리" sub="반복 주기별 일정 템플릿 관리" onClose={onClose} wide={true}>
+    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
+      <div style={{fontSize:12,color:"var(--t2)"}}>{rts.length+"개의 정기 일정"}</div>
+      <div style={{display:"flex",gap:6}}>
+        <button className="btn btn-ghost btn-sm" style={{fontSize:10}} onClick={()=>{if(confirm("초기화할까요?"))onReset()}}>초기화</button>
+        <button className="btn btn-primary btn-sm" onClick={()=>{setShowAdd(p=>!p);setEditId(null)}}>{showAdd?"닫기":"+ 정기 일정 추가"}</button>
+      </div>
+    </div>
+    {showAdd&&<div style={{marginBottom:12,padding:14,borderRadius:10,border:"1px solid var(--border2)",background:"var(--sky-l)"}}>
+      <div style={{fontSize:11,fontWeight:700,color:"var(--sky-deep)",marginBottom:10}}>새 정기 일정 추가</div>
+      <ScheduleForm team={team} onSubmit={payload=>{onAdd({kind:"routine",...payload});setShowAdd(false)}} onCancel={()=>setShowAdd(false)} showCancel={true}/>
+    </div>}
+    {rts.length===0&&!showAdd&&<div style={{textAlign:"center",padding:"24px 0",color:"var(--t3)",fontSize:12}}>등록된 정기 일정이 없습니다. 추가 버튼으로 시작하세요.</div>}
+    {rts.map(r=>{
+      const clr=CYCLE_CLR[r.cycle]||"#64748B";const isEd=editId===r.id;
+      const aNames=r.assignees==="all"?"전체 인원":(Array.isArray(r.assignees)?(r.assignees.map(id=>{const m=(team||[]).find(x=>x.id===id);return m?m.name:id}).join(", ")):"없음");
+      return <div key={r.id} style={{marginBottom:8,borderRadius:10,border:"1px solid "+(isEd?clr:clr+"30"),overflow:"hidden"}}>
+        <div style={{padding:"12px 14px",background:clr+"07",display:"flex",alignItems:"flex-start",gap:10}}>
+          <div style={{flex:1,minWidth:0}}>
+            <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:4}}>
+              <span style={{fontSize:9,padding:"1px 6px",borderRadius:10,background:clr,color:"#fff",fontWeight:700,flexShrink:0}}>{r.cycle}</span>
+              <span style={{fontSize:12,fontWeight:700,color:"var(--text)"}}>{r.task}</span>
+              {r.legal&&<span style={{fontSize:9,padding:"1px 5px",borderRadius:10,background:"#FEF2F2",color:"#DC2626",border:"1px solid #FECACA",fontWeight:700}}>법정</span>}
+            </div>
+            <div style={{fontSize:10,color:"var(--t3)",display:"flex",gap:12}}>
+              <span>{"시작: "+r.startDate}</span>
+              {r.cycle!=="일회성"&&<span>{"매월 "+r.day+"일"}</span>}
+              <span>{"담당: "+aNames}</span>
+            </div>
+          </div>
+          <div style={{display:"flex",gap:5,flexShrink:0}}>
+            <button onClick={()=>setEditId(isEd?null:r.id)} style={{padding:"4px 10px",borderRadius:7,fontSize:10,fontWeight:700,fontFamily:"inherit",cursor:"pointer",border:"1.5px solid "+(isEd?clr:"var(--border2)"),background:isEd?clr+"15":"#fff",color:isEd?clr:"var(--t2)"}}>{isEd?"닫기":"수정"}</button>
+            <button onClick={()=>handleDelete(r)} style={{padding:"4px 10px",borderRadius:7,border:"1px solid #FECACA",background:"#FEF2F2",color:"#EF4444",cursor:"pointer",fontSize:10,fontWeight:700,fontFamily:"inherit"}}>삭제</button>
+          </div>
+        </div>
+        {isEd&&<RoutineEditForm routine={r} team={team||[]} onSave={payload=>handleEditSave(r.id,payload)} onCancel={()=>setEditId(null)}/>}
+      </div>;
+    })}
+  </Modal>;
+}
+
+// ── PageOB ─────────────────────────────────────────────────────────────────────
+function GlobalRoutineModal({mtype,gTmpl,setGTmpl,onClose}){
+  const ts2=TYPE_S[mtype]||{clr:"#0EA5E9",cls:"bdg-sky"};
+  const gItems=(gTmpl&&gTmpl[mtype])||[];
+  const[newText,setNewText]=useState("");
+  const[editId,setEditId]=useState(null);
+  const[editText,setEditText]=useState("");
+  const inputRef=useRef(null);
+
+  function addItem(){
+    const t=newText.trim();if(!t)return;
+    const upd={...gTmpl,[mtype]:[...gItems,{id:"g_"+Date.now(),text:t}]};
+    setGTmpl(upd);saveGTmpl(upd);setNewText("");if(inputRef.current)inputRef.current.focus();
+  }
+  function startEdit(g){setEditId(g.id);setEditText(g.text)}
+  function saveEdit(gid){
+    const t=editText.trim();if(!t)return;
+    const upd={...gTmpl,[mtype]:gItems.map(g=>g.id===gid?{...g,text:t}:g)};
+    setGTmpl(upd);saveGTmpl(upd);setEditId(null);setEditText("");
+  }
+  function delItem(gid){
+    const upd={...gTmpl,[mtype]:gItems.filter(g=>g.id!==gid)};
+    setGTmpl(upd);saveGTmpl(upd);
+  }
+
+  return <Modal title={mtype+" 공통 루틴 마스터 관리"} sub={"이 유형의 모든 대상자 체크리스트에 자동 적용됩니다"} onClose={onClose} wide={true}>
+    <div style={{marginBottom:14,padding:"10px 14px",borderRadius:9,background:ts2.clr+"08",border:"1px solid "+ts2.clr+"30",fontSize:11,color:ts2.clr}}>
+      {"현재 "+gItems.length+"개의 공통 루틴 항목이 등록되어 있습니다. 항목을 추가하면 \""+mtype+"\" 모든 대상자의 체크리스트에 즉시 반영됩니다."}
+    </div>
+    <div style={{display:"flex",gap:8,marginBottom:16}}>
+      <input ref={inputRef} className="inp" placeholder={"새 공통 루틴 항목 입력 (예: 4대보험 취득 신고)"} value={newText} onChange={e=>setNewText(e.target.value)} onKeyDown={e=>e.key==="Enter"&&addItem()}/>
+      <button className="btn btn-primary" style={{flexShrink:0,padding:"6px 16px"}} onClick={addItem}>추가</button>
+    </div>
+    {gItems.length===0?<div style={{textAlign:"center",padding:"24px 0",color:"var(--t3)",fontSize:12,borderRadius:10,border:"1px dashed var(--border2)",background:"var(--bg)"}}>
+      등록된 공통 루틴 항목이 없습니다. 위 입력창으로 추가해보세요.
+    </div>:gItems.map((g,i)=><div key={g.id} style={{display:"flex",alignItems:"center",gap:8,padding:"9px 12px",borderRadius:9,border:"1px solid "+(editId===g.id?ts2.clr:"var(--border)"),background:editId===g.id?ts2.clr+"07":"#fff",marginBottom:6}}>
+      <span style={{fontSize:11,fontWeight:600,color:"var(--t3)",minWidth:20,textAlign:"center"}}>{i+1}</span>
+      <span style={{fontSize:9,padding:"1px 6px",borderRadius:10,background:ts2.clr,color:"#fff",fontWeight:700,flexShrink:0}}>공통</span>
+      {editId===g.id?<>
+        <input className="inp" style={{flex:1,fontSize:11,padding:"4px 8px"}} value={editText} onChange={e=>setEditText(e.target.value)} onKeyDown={e=>e.key==="Enter"&&saveEdit(g.id)} autoFocus/>
+        <button className="btn btn-primary btn-sm" onClick={()=>saveEdit(g.id)}>저장</button>
+        <button className="btn btn-ghost btn-sm" onClick={()=>setEditId(null)}>취소</button>
+      </>:<>
+        <span style={{flex:1,fontSize:12,color:"var(--text)"}}>{g.text}</span>
+        <button className="btn btn-ghost btn-sm" onClick={()=>startEdit(g)} style={{padding:"3px 10px"}}>수정</button>
+        <button onClick={()=>delItem(g.id)} style={{width:24,height:24,borderRadius:6,border:"1px solid #FECACA",background:"#FEF2F2",color:"#EF4444",cursor:"pointer",fontSize:12,display:"inline-flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>×</button>
+      </>}
+    </div>)}
+  </Modal>;
+}
+
+function PageOB({apiRows,apiStatus,team,onRefresh,gTmpl,setGTmpl}){
+  const[mgrF,setMgrF]=useState("ALL");
+  const[typeF,setTypeF]=useState("ALL");
+  const[monthF,setMonthF]=useState("ALL");
+  const[selRow,setSelRow]=useState(null);
+  const[routineModal,setRoutineModal]=useState(null);
+  const[clRefresh,setClRefresh]=useState(0); // mtype string or null
+  const moveRows=useMemo(()=>(apiRows||[]).filter(r=>MOVE_TYPES.includes(String(r.isReflected||"").trim())),[apiRows]);
+  const months=useMemo(()=>[...new Set(moveRows.map(r=>String(r.reflectMonth||"").trim()).filter(Boolean))].sort(),[moveRows]);
+  const managers=useMemo(()=>[...new Set(moveRows.map(r=>String(r.manager||"").trim()).filter(Boolean))]  ,[moveRows]);
+  const filtered=useMemo(()=>moveRows.filter(r=>{
+    if(monthF!=="ALL"&&String(r.reflectMonth||"").trim()!==monthF)return false;
+    if(mgrF!=="ALL"&&String(r.manager||"").trim()!==mgrF)return false;
+    if(typeF!=="ALL"&&String(r.isReflected||"").trim()!==typeF)return false;
+    return true;
+  }),[moveRows,monthF,mgrF,typeF]);
+  const typeCounts=useMemo(()=>{const c={};MOVE_TYPES.forEach(t=>{c[t]=moveRows.filter(r=>String(r.isReflected||"").trim()===t).length});return c},[moveRows]);
+  useEffect(()=>{setSelRow(null)},[mgrF]);
+  const TH={background:"var(--sky-d)",borderRight:"1px solid rgba(255,255,255,.15)",padding:"7px 10px",fontSize:10,fontWeight:700,color:"#fff",whiteSpace:"nowrap",textAlign:"left"};
+  return <div className="fadein">
+    <div style={{display:"grid",gridTemplateColumns:"repeat(6,1fr)",gap:8,marginBottom:14}}>
+      {MOVE_TYPES.map(t=>{
+        const ts2=TYPE_S[t]||{clr:"#0EA5E9",bg:"#E0F2FE"};
+        const cnt=typeCounts[t]||0;
+        const gCnt=(gTmpl&&gTmpl[t]&&gTmpl[t].length)||0;
+        const isActive=typeF===t;
+        return <div key={t} className="card" style={{padding:"12px 14px",marginBottom:0,borderTop:"2px solid "+ts2.clr,background:isActive?ts2.bg:"#fff",position:"relative",overflow:"visible"}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:4}}>
+            <div style={{fontSize:10,fontWeight:700,color:ts2.clr,cursor:"pointer"}} onClick={()=>setTypeF(p=>p===t?"ALL":t)}>{t}</div>
+            <button onClick={e=>{e.stopPropagation();setRoutineModal(t)}} title="공통 루틴 관리" style={{width:18,height:18,borderRadius:5,border:"1px solid "+ts2.clr+"50",background:ts2.clr+"12",color:ts2.clr,cursor:"pointer",fontSize:10,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700,flexShrink:0}}>⚙</button>
+          </div>
+          <div style={{fontSize:22,fontWeight:800,color:ts2.clr,cursor:"pointer"}} onClick={()=>setTypeF(p=>p===t?"ALL":t)}>{cnt}</div>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginTop:2}}>
+            <div style={{fontSize:10,color:"var(--t3)",cursor:"pointer"}} onClick={()=>setTypeF(p=>p===t?"ALL":t)}>건</div>
+            {gCnt>0&&<div style={{fontSize:9,color:ts2.clr,background:ts2.clr+"12",padding:"1px 5px",borderRadius:8}}>{"공통 "+gCnt}</div>}
+          </div>
+        </div>;
+      })}
+    </div>
+    {apiStatus!=="ok"&&<div style={{padding:"8px 14px",borderRadius:9,border:"1px solid",marginBottom:12,display:"flex",alignItems:"center",gap:10,fontSize:11,background:apiStatus==="err"?"#FEF2F2":"var(--sky-l)",borderColor:apiStatus==="err"?"#FECACA":"var(--sky-m)",color:apiStatus==="err"?"#DC2626":"var(--sky-d)"}}>
+      <div style={{width:7,height:7,borderRadius:"50%",background:"currentColor",animation:apiStatus==="loading"?"pulse 1s infinite":"none"}}/>
+      {apiStatus==="loading"?"로딩 중...":apiStatus==="err"?"API 연결 실패":"API 대기"}
+      <div style={{flex:1}}/><button className="btn btn-secondary btn-sm" onClick={onRefresh}>새로고침</button>
+    </div>}
+    <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:12,flexWrap:"wrap"}}>
+      <select className="inp" style={{width:"auto",fontSize:11}} value={monthF} onChange={e=>setMonthF(e.target.value)}>
+        <option value="ALL">월 전체</option>
+        {months.map(m=><option key={m} value={m}>{m}</option>)}
+      </select>
+      <div className="tab-bar">
+        <button className={"tab-btn"+(mgrF==="ALL"?" active":"")} onClick={()=>setMgrF("ALL")}>전체</button>
+        {managers.map(m=>{const tm=(team||[]).find(x=>x.name===m);return <button key={m} className={"tab-btn"+(mgrF===m?" active":"")} onClick={()=>setMgrF(m)} style={mgrF===m&&tm?{background:tm.color+"15",borderColor:tm.color,color:tm.color}:{}}>{m}</button>;})}
+      </div>
+      <button className="btn btn-ghost btn-sm" onClick={()=>{setMonthF("ALL");setMgrF("ALL");setTypeF("ALL")}}>초기화</button>
+      <div style={{flex:1}}/><span style={{fontSize:11,color:"var(--t3)"}}>{filtered.length+"/"+moveRows.length+"건"}</span>
+    </div>
+    <div style={{display:"flex",gap:0,background:"#fff",border:"1px solid var(--border2)",borderRadius:"var(--r)",overflow:"hidden",boxShadow:"var(--sh)"}}>
+      <div style={{flex:1,overflow:"auto",minWidth:0,display:"flex",flexDirection:"column"}}>
+        <div style={{padding:"13px 18px",borderBottom:"1px solid var(--border)",background:"linear-gradient(135deg,#fff,#F8FBFF)",display:"flex",alignItems:"center",gap:8,flexShrink:0}}>
+          <div className="card-icon"><svg width="14" height="14" viewBox="0 0 20 20" fill="none"><path d="M4 10h12M10 4l6 6-6 6" stroke="#0EA5E9" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg></div>
+          <div style={{fontSize:13,fontWeight:700,color:"var(--sky-deep)"}}>인사이동 관리 — D열 자동 필터</div>
+          <div style={{marginLeft:"auto",fontSize:10,color:"var(--t3)"}}>{"카드 우상단 ⚙ 클릭 → 유형별 공통 루틴 관리"}</div>
+          {selRow&&<div style={{fontSize:11,color:"var(--sky-d)",fontWeight:600}}>← 행 클릭시 체크리스트</div>}
+        </div>
+        <div style={{overflowX:"auto",flex:1}}>
+          <table className="xtbl" style={{minWidth:860}}>
+            <thead>
+              <tr>
+                <th className="xcl" style={{minWidth:36}}>#</th>
+                {["A급여반영월","B작성자","C담당자","D구분","E사업부","F사번","G대상자","H내용","I금액","J기타"].map(h=><th key={h} className="xcl" style={{minWidth:h.startsWith("D")?100:h.startsWith("H")?150:80}}>{h[0]}</th>)}
+                <th className="xcl" style={{minWidth:110,background:"#E0E7FF",color:"#4F46E5",fontWeight:800}}>K 1차검증</th>
+                <th className="xcl" style={{minWidth:110,background:"#D1FAE5",color:"#059669",fontWeight:800}}>L 2차검증</th>
+                <th className="xcl" style={{minWidth:90,background:"#EDE9FE",color:"#7C3AED",fontWeight:800}}>M 최종완료</th>
+              </tr>
+            </thead>
+            <tbody key={clRefresh}>
+              {filtered.length===0?<tr><td colSpan={13} style={{textAlign:"center",padding:30,color:"var(--t3)",fontSize:12}}>
+                {apiStatus==="loading"?"로딩 중...":moveRows.length===0?"업무 이력 탭에서 데이터를 불러오세요":"필터 조건에 맞는 데이터 없음"}
+              </td></tr>:filtered.map((row,ri)=>{
+                const ts2=TYPE_S[String(row.isReflected||"").trim()]||{clr:"#64748B",cls:"bdg-gray"};
+                const isSel=selRow&&selRow.rowIndex===row.rowIndex;
+                const mgrName=String(row.manager||"").trim();const tm=(team||[]).find(x=>x.name===mgrName);
+                return <tr key={ri} className={"row-click"+(isSel?" row-sel":"")} onClick={()=>setSelRow(isSel?null:row)}>
+                  <td className="rnum">{ri+1}</td>
+                  <td className="mono" style={{fontSize:11}}>{row.reflectMonth||"—"}</td>
+                  <td>{row.writer||"—"}</td>
+                  <td><div style={{display:"flex",alignItems:"center",gap:5}}>{tm&&<Av name={tm.name} color={tm.color} size={18}/>}<span style={{fontWeight:600,color:tm?tm.color:"var(--text)"}}>{mgrName||"—"}</span></div></td>
+                  <td><span className={"badge "+(ts2.cls||"bdg-gray")} style={{fontSize:10}}>{row.isReflected||"—"}</span></td>
+                  <td>{row.department||"—"}</td>
+                  <td className="mono" style={{fontSize:11}}>{row.employeeId||"—"}</td>
+                  <td style={{fontWeight:700,color:"var(--sky-d)"}}>{row.targetName||"—"}</td>
+                  <td style={{maxWidth:160}}><span style={{display:"block",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{fmtCell(row.content)}</span></td>
+                  <td className="amt">{fmtAmt(row.amount)}</td>
+                  <td style={{color:"var(--t3)"}}>{row.etc||"—"}</td>
+                  <td style={{background:row.verify1Done?"#EEF2FF":"transparent"}}>
+                    {row.verify1Done&&<div style={{fontSize:10,color:"#4F46E5",fontWeight:700}}>{"완료 "+String(row.verify1By||"")}</div>}
+                    {!row.verify1Done&&<span style={{fontSize:10,color:"var(--t3)"}}>미완료</span>}
+                  </td>
+                  <td style={{background:row.verify2Done?"#ECFDF5":"transparent"}}>
+                    {row.verify2Done&&<div style={{fontSize:10,color:"#059669",fontWeight:700}}>{"완료 "+String(row.verify2By||"")}</div>}
+                    {!row.verify2Done&&<span style={{fontSize:10,color:"var(--t3)"}}>{row.verify1Done?"미완료":"대기"}</span>}
+                  </td>
+                  <td style={{textAlign:"center",background:"transparent"}}>
+                    {(()=>{
+                      const mgrName=String(row.manager||"").trim();
+                      const target=String(row.targetName||"").trim();
+                      const mtype=String(row.isReflected||"").trim();
+                      if(!mtype||!target)return <span style={{fontSize:10,color:"#CBD5E1"}}>—</span>;
+                      const k=`cl__${mgrName.replace(/\s/g,"_")}__${target.replace(/\s/g,"_")}__${mtype.replace(/\s/g,"_")}`;
+                      let items=SheetDB.getCL(k)||[];
+                      if(items.length===0)return <span style={{fontSize:9,padding:"2px 7px",borderRadius:10,background:"#F8FAFC",color:"#94A3B8",fontWeight:700}}>미시작</span>;
+                      const total=items.length;const done=items.filter(x=>x.done).length;
+                      if(done===total)return <span style={{fontSize:9,padding:"2px 7px",borderRadius:10,background:"#F0FDF4",color:"#16A34A",border:"1px solid #BBF7D0",fontWeight:700}}>완료</span>;
+                      if(done===0)return <span style={{fontSize:9,padding:"2px 7px",borderRadius:10,background:"#FEF9C3",color:"#92400E",border:"1px solid #FDE68A",fontWeight:700}}>미완료</span>;
+                      return <span style={{fontSize:9,padding:"2px 7px",borderRadius:10,background:"#FFF7ED",color:"#C2410C",fontWeight:700}}>{done+"/"+total}</span>;
+                    })()}
+                  </td>
+                </tr>;
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      {selRow&&<ChecklistPanel row={selRow} managerName={mgrF==="ALL"?String(selRow.manager||""):mgrF} onClose={()=>{setSelRow(null);setClRefresh(p=>p+1)}} gTmpl={gTmpl} setGTmpl={setGTmpl}/>}
+    </div>
+    {routineModal&&<GlobalRoutineModal mtype={routineModal} gTmpl={gTmpl} setGTmpl={setGTmpl} onClose={()=>setRoutineModal(null)}/>}
+  </div>;
+}
+
+// ── PageTeam ───────────────────────────────────────────────────────────────────
+function QuickAddModal({member,defaultDate,onSave,onClose}){
+  const[task,setTask]=useState("");
+  const[due,setDue]=useState(defaultDate||todayStr);
+  const[urgent,setUrgent]=useState(false);
+  const inpRef=useRef(null);
+  useEffect(()=>{if(inpRef.current)inpRef.current.focus()},[]);
+  function handleSave(){if(!task.trim())return;onSave(task,due,urgent);}
+  return <div className="modal-ov" onClick={onClose}>
+    <div className="modal-box fadein" style={{width:"min(400px,96vw)"}} onClick={e=>e.stopPropagation()}>
+      <div className="modal-hd">
+        <div>
+          <div className="modal-title" style={{color:member.color}}>{"업무 추가 — "+member.name}</div>
+          <div className="modal-sub">{member.role+" · "+due+" 기준"}</div>
+        </div>
+        <button onClick={onClose} style={{width:28,height:28,borderRadius:8,border:"1px solid var(--border2)",background:"var(--sky-l)",color:"var(--t2)",cursor:"pointer",fontSize:14,display:"flex",alignItems:"center",justifyContent:"center"}}>X</button>
+      </div>
+      <div className="modal-body">
+        <div style={{display:"flex",alignItems:"center",gap:8,padding:"8px 12px",borderRadius:10,background:member.color+"10",border:"1px solid "+member.color+"30",marginBottom:14}}>
+          <Av name={member.name} color={member.color} size={30}/>
+          <div><div style={{fontSize:12,fontWeight:700,color:member.color}}>{member.name}</div><div style={{fontSize:10,color:"var(--t3)"}}>{member.role}</div></div>
+        </div>
+        <FR label="업무 내용">
+          <input ref={inpRef} className="inp" placeholder="예: 4대보험 취득신고 확인" value={task} onChange={e=>setTask(e.target.value)} onKeyDown={e=>e.key==="Enter"&&handleSave()}/>
+        </FR>
+        <FR label="마감일">
+          <input type="date" className="inp" value={due} onChange={e=>setDue(e.target.value)}/>
+        </FR>
+        <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:14}}>
+          <input type="checkbox" id="qa-urgent" checked={urgent} onChange={e=>setUrgent(e.target.checked)} style={{width:14,height:14,accentColor:member.color,cursor:"pointer"}}/>
+          <label htmlFor="qa-urgent" style={{fontSize:11,color:"var(--t2)",cursor:"pointer",fontWeight:600}}>긴급 업무로 지정</label>
+        </div>
+        <div style={{display:"flex",gap:8,justifyContent:"flex-end"}}>
+          <button className="btn btn-ghost" onClick={onClose}>취소</button>
+          <button className="btn btn-primary" onClick={handleSave} style={{background:member.color,borderColor:member.color}}>업무 추가</button>
+        </div>
+      </div>
+    </div>
+  </div>;
+}
+
+function PageTeam({tasks,ts,team,onToggle,onDelete,onUpdateTeam,selectedDate,onSelectDate}){
+  const[modal,setModal]=useState(null);
+  const[form,setForm]=useState({name:"",role:"",color:"#0EA5E9"});
+  const[showWeekly,setShowWeekly]=useState(false);
+  const[quickAdd,setQuickAdd]=useState(null); // {member} — inline quick-add form
+  const[copied,setCopied]=useState(false);
+  const[reportBase,setReportBase]=useState(selectedDate);
+
+  // Reset reportBase to selectedDate each time the modal opens
+  function openWeekly(){setReportBase(selectedDate);setShowWeekly(true)}
+
+  function prevDay(){const d=new Date(selectedDate);d.setDate(d.getDate()-1);onSelectDate(fmt(d))}
+  function nextDay(){const d=new Date(selectedDate);d.setDate(d.getDate()+1);onSelectDate(fmt(d))}
+
+  // Shift report week by N weeks (positive = future, negative = past)
+  function shiftReportWeek(weeks){
+    const d=new Date(reportBase);d.setDate(d.getDate()+weeks*7);setReportBase(fmt(d));
+  }
+
+  // Weekly range helpers — derived from modal's reportBase, not selectedDate
+  function getWeekRange(dateStr){
+    const d=new Date(dateStr);
+    const dow=d.getDay();
+    const diffMon=dow===0?-6:1-dow;
+    const mon=new Date(d);mon.setDate(d.getDate()+diffMon);
+    const sun=new Date(mon);sun.setDate(mon.getDate()+6);
+    return{start:fmt(mon),end:fmt(sun)};
+  }
+  const reportWeekRange=getWeekRange(reportBase);
+  const reportNextStart=new Date(reportWeekRange.end);reportNextStart.setDate(reportNextStart.getDate()+1);
+  const reportNextEnd=new Date(reportNextStart);reportNextEnd.setDate(reportNextStart.getDate()+6);
+  const reportNextWeekRange={start:fmt(reportNextStart),end:fmt(reportNextEnd)};
+
+  // Check if current reportWeekRange is the "actual" current week for labeling
+  const todayWeekRange=getWeekRange(todayStr);
+  const isCurrentWeek=reportWeekRange.start===todayWeekRange.start;
+  const weekOffset=(()=>{
+    const diffMs=new Date(reportWeekRange.start)-new Date(todayWeekRange.start);
+    return Math.round(diffMs/(7*86400000));
+  })();
+  const weekLabel=isCurrentWeek?"이번 주":weekOffset<0?Math.abs(weekOffset)+"주 전":weekOffset+"주 후";
+
+  function inRange(due,range){return due>=range.start&&due<=range.end}
+
+  // Weekly summary — ALL tasks in range, regardless of completion status
+  const weeklySummary=useMemo(()=>{
+    return (team||[]).map(m=>{
+      const mt=(tasks||[]).filter(t=>t.asgn===m.id);
+      const thisWeekTasks=mt.filter(t=>inRange(t.due,reportWeekRange));
+      const nextWeekTasks=mt.filter(t=>inRange(t.due,reportNextWeekRange));
+      return{...m,thisWeekTasks,nextWeekTasks};
+    });
+  },[tasks,ts,team,reportBase]);
+
+  function buildReportText(){
+    const lines=[];
+    lines.push(`[주간 보고 요약 — ${weekLabel}]`);
+    lines.push(`대상 주: ${reportWeekRange.start} ~ ${reportWeekRange.end}`);
+    lines.push(`다음 주: ${reportNextWeekRange.start} ~ ${reportNextWeekRange.end}`);
+    lines.push("");
+    weeklySummary.forEach(m=>{
+      if(m.thisWeekTasks.length===0&&m.nextWeekTasks.length===0)return;
+      lines.push(`■ ${m.name} (${m.role})`);
+      lines.push(`  ▶ 이번 주 일정 (${m.thisWeekTasks.length}건)`);
+      if(m.thisWeekTasks.length===0)lines.push("    - 없음");
+      else m.thisWeekTasks.forEach(t=>lines.push(`    - [${t.due}] ${t.task} ${ts[t.id]==="completed"?"[완료]":"[미완료]"}`));
+      lines.push(`  ▷ 다음 주 일정 (${m.nextWeekTasks.length}건)`);
+      if(m.nextWeekTasks.length===0)lines.push("    - 없음");
+      else m.nextWeekTasks.forEach(t=>lines.push(`    - [${t.due}] ${t.task} ${ts[t.id]==="completed"?"[완료]":"[미완료]"}`));
+      lines.push("");
+    });
+    return lines.join("\n");
+  }
+
+  function handleCopy(){
+    const text=buildReportText();
+    if(navigator.clipboard&&navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(()=>{setCopied(true);setTimeout(()=>setCopied(false),2000)});
+    }else{
+      const ta=document.createElement("textarea");ta.value=text;document.body.appendChild(ta);ta.select();
+      try{document.execCommand("copy");setCopied(true);setTimeout(()=>setCopied(false),2000)}catch(e){}
+      document.body.removeChild(ta);
+    }
+  }
+
+  const dayStats=(team||[]).map(m=>{const mt=(tasks||[]).filter(t=>t.asgn===m.id&&t.due===selectedDate);const done=mt.filter(t=>ts[t.id]==="completed").length;const pct=mt.length?Math.round(done/mt.length*100):0;return{...m,dayTotal:mt.length,dayDone:done,dayPct:pct,dayTasks:mt}});
+  const allDayTasks=(tasks||[]).filter(t=>t.due===selectedDate);
+  const allDayDone=allDayTasks.filter(t=>ts[t.id]==="completed").length;
+  const allDayPct=allDayTasks.length?Math.round(allDayDone/allDayTasks.length*100):0;
+  function openAdd(){setForm({name:"",role:"",color:"#0EA5E9"});setModal("add")}
+  function openEdit(m){setForm({name:m.name,role:m.role,color:m.color});setModal(m)}
+  function save(){if(!form.name.trim())return;if(modal==="add")onUpdateTeam([...(team||[]),{id:"T"+Date.now(),...form}]);else onUpdateTeam((team||[]).map(m=>m.id===modal.id?{...m,...form}:m));setModal(null)}
+  function remove(id){if(confirm("팀원을 삭제할까요?"))onUpdateTeam((team||[]).filter(m=>m.id!==id))}
+
+  function scrollToMember(memberId){
+    const el=document.getElementById("member-card-"+memberId);
+    if(el)el.scrollIntoView({behavior:"smooth",block:"start"});
+  }
+
+  function handleQuickSave(task,due){
+    if(!task.trim()||!quickAdd)return;
+    const m=quickAdd.member;
+    const newTask={id:uid(),empId:null,name:"",dept:"",task:task.trim(),due,category:"일회성",urgent:false,legal:false,asgn:m.id,note:"",isRoutine:false};
+    if(typeof window.__addTask==="function")window.__addTask(newTask);
+    setQuickAdd(null);
+  }
+
+  return <div className="fadein">
+    <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:14,background:"#fff",border:"1px solid var(--border2)",borderRadius:"var(--r)",padding:"12px 18px",boxShadow:"var(--sh)"}}>
+      <div style={{flex:1,display:"flex",alignItems:"center",gap:8}}>
+        <button className="btn btn-ghost btn-sm" onClick={prevDay} style={{padding:"5px 10px",fontWeight:700}}>&#8249; 이전</button>
+        <input type="date" value={selectedDate} onChange={e=>onSelectDate(e.target.value)} style={{fontSize:12,padding:"5px 10px",border:"1.5px solid var(--border2)",borderRadius:"var(--rs)",background:"#fff",color:"var(--text)",fontFamily:"inherit",outline:"none"}}/>
+        <button className="btn btn-ghost btn-sm" onClick={nextDay} style={{padding:"5px 10px",fontWeight:700}}>다음 &#8250;</button>
+        <button className="btn btn-ghost btn-sm" onClick={()=>onSelectDate(todayStr)} style={{padding:"5px 10px",color:"var(--sky-d)"}}>오늘</button>
+      </div>
+      <button className="btn btn-secondary" style={{fontSize:11,padding:"5px 13px"}} onClick={openWeekly}>주간 보고 요약</button>
+      <button className="btn btn-primary" onClick={openAdd}>+ 팀원 추가</button>
+    </div>
+
+    <div style={{marginBottom:14,background:"#fff",border:"1px solid var(--border2)",borderRadius:"var(--r)",padding:"14px 18px",boxShadow:"var(--sh)"}}>
+      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:8}}>
+        <div style={{fontSize:12,fontWeight:700,color:"#8B5CF6"}}>{selectedDate+" 당일 진행률"}</div>
+        <div style={{fontSize:22,fontWeight:800,color:"#8B5CF6"}}>{allDayPct+"% "}<span style={{fontSize:12,fontWeight:500,color:"var(--t3)"}}>{allDayDone+"/"+allDayTasks.length+"개"}</span></div>
+      </div>
+      <PBar pct={allDayPct} color="#8B5CF6" h={7}/>
+      {allDayTasks.length===0&&<div style={{fontSize:11,color:"var(--t3)",marginTop:6}}>이 날짜에 배정된 일정이 없습니다.</div>}
+    </div>
+
+    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(220px,1fr))",gap:10,marginBottom:14}}>
+      {(team||[]).map((m,idx)=>{const d=dayStats[idx];
+        return <div key={m.id} className="card" style={{padding:"16px 18px",borderTop:"3px solid "+m.color}}>
+          <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:12}}>
+            <Av name={m.name} color={m.color} size={34}/>
+            <div style={{flex:1,minWidth:0,cursor:"pointer"}} onClick={()=>scrollToMember(m.id)} title={m.name+" 업무 목록으로 이동"}>
+              <div style={{fontSize:13,fontWeight:700,color:m.color,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{m.name}</div>
+              <div style={{fontSize:10,color:"var(--t3)"}}>{m.role}</div>
+            </div>
+            <div style={{display:"flex",gap:4}}>
+              <button className="btn btn-ghost" style={{padding:"3px 8px",fontSize:10}} onClick={()=>openEdit(m)}>수정</button>
+              <button className="btn btn-danger" style={{padding:"3px 8px",fontSize:10}} onClick={()=>remove(m.id)}>삭제</button>
+            </div>
+          </div>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-end",marginBottom:6}}>
+            <span style={{fontSize:24,fontWeight:800,color:m.color,letterSpacing:"-.04em"}}>{d.dayPct+"%"}</span>
+            <span style={{fontSize:10,color:"var(--t3)"}}>{d.dayDone+"/"+d.dayTotal}</span>
+          </div>
+          <PBar pct={d.dayPct} color={m.color} h={5}/>
+          <div style={{fontSize:10,color:"var(--t3)",marginTop:5}}>{d.dayDone+"/"+d.dayTotal+" 완료 · 당일"}</div>
+        </div>;
+      })}
+    </div>
+
+    {(team||[]).map((m,idx)=>{const d=dayStats[idx];
+      return <div key={m.id} id={"member-card-"+m.id} className="card">
+        <div className="card-hd">
+          <div className="card-title" style={{color:m.color}}><Av name={m.name} color={m.color} size={24}/>{m.name+" · "+m.role}<span style={{fontSize:10,fontWeight:500,color:"var(--t3)",marginLeft:6}}>{selectedDate}</span></div>
+          <div style={{display:"flex",alignItems:"center",gap:8}}>
+            <button onClick={()=>setQuickAdd({member:m})} title={""+m.name+"에게 업무 추가"} style={{padding:"3px 10px",borderRadius:7,border:"1.5px solid "+m.color+"50",background:m.color+"10",color:m.color,cursor:"pointer",fontSize:12,fontWeight:700,fontFamily:"inherit",display:"flex",alignItems:"center",gap:4}}>
+              <span style={{fontSize:14}}>+</span>업무 추가
+            </button>
+            <span style={{fontSize:12,fontWeight:800,color:m.color}}>{d.dayPct+"% "}<span style={{fontSize:10,fontWeight:500,color:"var(--t3)"}}>{d.dayDone+"/"+d.dayTotal}</span></span>
+          </div>
+        </div>
+        <div className="card-body">
+          {d.dayTasks.length>0?d.dayTasks.map(t=>{const isDone=ts[t.id]==="completed";
+            return <div key={t.id} style={{display:"flex",alignItems:"center",gap:10,padding:"8px 0",borderBottom:"1px solid var(--border)"}}>
+              <Chk checked={isDone} onChange={()=>onToggle(t.id)} color={m.color}/>
+              <div style={{flex:1,minWidth:0}}>
+                <div style={{display:"flex",alignItems:"center",gap:5,flexWrap:"wrap"}}>
+                  {t.isRoutine&&<span style={{fontSize:9,padding:"1px 5px",borderRadius:10,background:(CYCLE_CLR[t.category]||"#64748B")+"15",color:CYCLE_CLR[t.category]||"#64748B",fontWeight:700,flexShrink:0}}>{t.category}</span>}
+                  {t.urgent&&<span style={{fontSize:9,padding:"1px 5px",borderRadius:10,background:"#FEF2F2",color:"#DC2626",border:"1px solid #FECACA",fontWeight:700,flexShrink:0}}>긴급</span>}
+                  <span style={{fontSize:12,color:isDone?"var(--t3)":"var(--text)",textDecoration:isDone?"line-through":"none"}}>{t.task}</span>
+                </div>
+                <div style={{fontSize:10,color:"var(--t3)",marginTop:2}}>{t.due+" · "+dday(t.due)}</div>
+              </div>
+              <DelBtn onClick={()=>onDelete(t.id)}/>
+            </div>;
+          }):<div style={{fontSize:12,color:"var(--t3)",padding:"12px 0",textAlign:"center"}}>{selectedDate+"에 배정된 일정 없음"}</div>}
+        </div>
+      </div>;
+    })}
+
+    {quickAdd&&<QuickAddModal member={quickAdd.member} defaultDate={selectedDate} onSave={handleQuickSave} onClose={()=>setQuickAdd(null)}/>}
+    {modal&&modal!=="weekly"&&<Modal title={modal==="add"?"팀원 추가":"팀원 수정"} onClose={()=>setModal(null)}>
+      <FR label="이름 (한국어)"><input className="inp" value={form.name} onChange={e=>setForm(f=>({...f,name:e.target.value}))} placeholder="박혜연"/></FR>
+      <FR label="역할"><input className="inp" value={form.role} onChange={e=>setForm(f=>({...f,role:e.target.value}))} placeholder="HR 매니저"/></FR>
+      <FR label="컬러"><div style={{display:"flex",alignItems:"center",gap:8}}><input type="color" value={form.color} onChange={e=>setForm(f=>({...f,color:e.target.value}))} style={{width:36,height:36,border:"1px solid var(--border2)",borderRadius:8,cursor:"pointer",padding:3}}/><span style={{fontSize:12,fontFamily:"'DM Mono',monospace"}}>{form.color}</span></div></FR>
+      <div style={{display:"flex",gap:8,justifyContent:"flex-end",marginTop:14}}>
+        <button className="btn btn-ghost" onClick={()=>setModal(null)}>취소</button>
+        <button className="btn btn-primary" onClick={save}>저장</button>
+      </div>
+    </Modal>}
+
+    {showWeekly&&<div className="modal-ov" onClick={()=>setShowWeekly(false)}>
+      <div className="modal-box fadein" style={{width:"min(720px,96vw)",maxHeight:"90vh"}} onClick={e=>e.stopPropagation()}>
+        <div className="modal-hd">
+          <div>
+            <div className="modal-title">{"주간 보고 요약 — "+weekLabel}</div>
+            <div className="modal-sub">{reportWeekRange.start+" ~ "+reportWeekRange.end}</div>
+          </div>
+          <div style={{display:"flex",gap:6,alignItems:"center"}}>
+            <button className="btn btn-secondary btn-sm" onClick={handleCopy} style={{minWidth:80}}>{copied?"복사됨!":"텍스트 복사"}</button>
+            <button onClick={()=>setShowWeekly(false)} style={{width:28,height:28,borderRadius:8,border:"1px solid var(--border2)",background:"var(--sky-l)",color:"var(--t2)",cursor:"pointer",fontSize:14,display:"flex",alignItems:"center",justifyContent:"center"}}>X</button>
+          </div>
+        </div>
+        <div style={{padding:"10px 22px",borderBottom:"1px solid var(--border)",display:"flex",alignItems:"center",justifyContent:"space-between",background:"var(--bg)"}}>
+          <button className="btn btn-ghost btn-sm" onClick={()=>shiftReportWeek(-1)} style={{fontWeight:700}}>&#8249; 이전 주</button>
+          <div style={{textAlign:"center"}}>
+            <div style={{fontSize:12,fontWeight:700,color:"var(--sky-deep)"}}>{weekLabel}</div>
+            <div style={{fontSize:10,color:"var(--t3)"}}>{reportWeekRange.start+" ~ "+reportWeekRange.end}</div>
+          </div>
+          <button className="btn btn-ghost btn-sm" onClick={()=>shiftReportWeek(1)} style={{fontWeight:700}}>다음 주 &#8250;</button>
+        </div>
+        <div style={{padding:"16px 22px",overflowY:"auto",maxHeight:"calc(90vh - 130px)"}}>
+          {weeklySummary.map(m=><div key={m.id} style={{marginBottom:18,borderRadius:12,border:"1px solid "+m.color+"30",overflow:"hidden"}}>
+            <div style={{padding:"10px 14px",background:m.color+"10",display:"flex",alignItems:"center",gap:8,borderBottom:"1px solid "+m.color+"20"}}>
+              <Av name={m.name} color={m.color} size={26}/>
+              <div style={{flex:1}}>
+                <div style={{fontSize:13,fontWeight:800,color:m.color}}>{m.name}</div>
+                <div style={{fontSize:10,color:"var(--t3)"}}>{m.role}</div>
+              </div>
+              <div style={{fontSize:10,color:"var(--t3)"}}>{"이번 주 "+m.thisWeekTasks.length+"건 / 다음 주 "+m.nextWeekTasks.length+"건"}</div>
+            </div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:0}}>
+              <div style={{padding:"12px 14px",borderRight:"1px solid var(--border)"}}>
+                <div style={{fontSize:10,fontWeight:700,color:"#16A34A",textTransform:"uppercase",letterSpacing:".06em",marginBottom:8,display:"flex",alignItems:"center",gap:5}}>
+                  <span style={{width:6,height:6,borderRadius:"50%",background:"#16A34A",display:"inline-block"}}/>
+                  {weekLabel+" 일정 ("+m.thisWeekTasks.length+"건)"}
+                </div>
+                {m.thisWeekTasks.length===0?<div style={{fontSize:11,color:"var(--t3)"}}>일정 없음</div>:
+                  m.thisWeekTasks.map(t=>{const done=ts[t.id]==="completed";return <div key={t.id} style={{display:"flex",alignItems:"flex-start",gap:6,marginBottom:5}}>
+                    <span style={{width:5,height:5,borderRadius:"50%",background:done?"#16A34A":"#CBD5E1",flexShrink:0,marginTop:5}}/>
+                    <div><div style={{fontSize:11,color:done?"var(--t3)":"var(--text)",fontWeight:500,textDecoration:done?"line-through":"none"}}>{t.task}</div><div style={{fontSize:9.5,color:"var(--t3)",display:"flex",gap:6}}><span>{t.due}</span><span style={{color:done?"#16A34A":"#F59E0B",fontWeight:700}}>{done?"[완료]":"[미완료]"}</span></div></div>
+                  </div>;})
+                }
+              </div>
+              <div style={{padding:"12px 14px"}}>
+                <div style={{fontSize:10,fontWeight:700,color:"var(--sky-d)",textTransform:"uppercase",letterSpacing:".06em",marginBottom:8,display:"flex",alignItems:"center",gap:5}}>
+                  <span style={{width:6,height:6,borderRadius:"50%",background:"var(--sky-d)",display:"inline-block"}}/>
+                  {"다음 주 일정 ("+m.nextWeekTasks.length+"건)"}
+                </div>
+                {m.nextWeekTasks.length===0?<div style={{fontSize:11,color:"var(--t3)"}}>일정 없음</div>:
+                  m.nextWeekTasks.map(t=>{const done=ts[t.id]==="completed";return <div key={t.id} style={{display:"flex",alignItems:"flex-start",gap:6,marginBottom:5}}>
+                    <span style={{width:5,height:5,borderRadius:"50%",background:done?"#16A34A":"var(--sky-d)",flexShrink:0,marginTop:5}}/>
+                    <div><div style={{fontSize:11,color:done?"var(--t3)":"var(--text)",fontWeight:500,textDecoration:done?"line-through":"none"}}>{t.task}</div><div style={{fontSize:9.5,color:"var(--t3)",display:"flex",gap:6}}><span>{t.due}</span><span style={{color:done?"#16A34A":"#F59E0B",fontWeight:700}}>{done?"[완료]":"[미완료]"}</span></div></div>
+                  </div>;})
+                }
+              </div>
+            </div>
+          </div>)}
+          {weeklySummary.length===0&&<div style={{textAlign:"center",padding:"32px 0",color:"var(--t3)"}}>팀원 데이터가 없습니다.</div>}
+        </div>
+      </div>
+    </div>}
+  </div>;
+}
+
+
+// ── PageHistory ────────────────────────────────────────────────────────────────
+function PageHistory({adminName,setAdminName,apiRows,setApiRows,apiStatus,setApiStatus,apiUrl,setApiUrl}){
+  const[vLoad,setVLoad]=useState({});
+  const[showUrlEdit,setShowUrlEdit]=useState(false);
+  const[fMonth,setFMonth]=useState("ALL");const[fMgr,setFMgr]=useState("ALL");const[fRefl,setFRefl]=useState("ALL");
+  const[showAdd,setShowAdd]=useState(false);
+  const EMPTY={reflectMonth:"",writer:"",manager:"",isReflected:"",department:"",employeeId:"",targetName:"",content:"",amount:"",etc:""};
+  const[newRow,setNewRow]=useState({...EMPTY});const[addLoading,setAddLoading]=useState(false);
+  function fetchData(url){
+    setApiStatus("loading");
+    fetch(url||apiUrl).then(r=>{if(!r.ok)throw new Error("HTTP "+r.status);return r.json()}).then(data=>{
+      const rows=Array.isArray(data)?data:(data.data||[]);
+      setApiRows(rows.map((r,i)=>({rowIndex:r.rowIndex||(i+2),...r})));
+      setApiStatus("ok");
+    }).catch(()=>setApiStatus("err"));
+  }
+  useEffect(()=>{if(apiStatus==="idle")fetchData()},[]);
+  const months=useMemo(()=>[...new Set((apiRows||[]).map(r=>String(r.reflectMonth||"").trim()).filter(Boolean))].sort(),[apiRows]);
+  const managers=useMemo(()=>[...new Set((apiRows||[]).map(r=>String(r.manager||"").trim()).filter(Boolean))].sort(),[apiRows]);
+  const reflOpts=useMemo(()=>[...new Set((apiRows||[]).map(r=>String(r.isReflected||"").trim()).filter(Boolean))].sort(),[apiRows]);
+  const filtered=useMemo(()=>(apiRows||[]).filter(r=>{
+    if(fMonth!=="ALL"&&String(r.reflectMonth||"").trim()!==fMonth)return false;
+    if(fMgr!=="ALL"&&String(r.manager||"").trim()!==fMgr)return false;
+    if(fRefl!=="ALL"&&String(r.isReflected||"").trim()!==fRefl)return false;
+    return true;
+  }),[apiRows,fMonth,fMgr,fRefl]);
+  async function postAction(body){return fetch(apiUrl,{method:"POST",mode:"no-cors",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(body)})}
+  async function toggleV1(row){
+    const k="v1_"+row.rowIndex;setVLoad(p=>({...p,[k]:true}));
+    // C열(manager) 이름을 1차 검증자로 사용
+    const v1Name=String(row.manager||adminName||"담당자").trim();
+    const v1Label=v1Name+" 확인 완료";
+    setApiRows(prev=>prev.map(r=>{
+      if(r.rowIndex!==row.rowIndex)return r;
+      if(!r.verify1Done)return{...r,verify1Done:true,verify1By:v1Label,verify1At:nowIso().slice(0,16).replace("T"," ")};
+      return{...r,verify1Done:false,verify1By:"",verify1At:"",verify2Done:false,verify2By:"",verify2At:""};
+    }));
+    try{await postAction({action:"verify1",rowIndex:row.rowIndex,verifyBy:v1Label})}catch(e){}
+    setVLoad(p=>({...p,[k]:false}));
+  }
+  async function toggleV2(row){
+    if(!row.verify1Done)return;const k="v2_"+row.rowIndex;setVLoad(p=>({...p,[k]:true}));
+    // 2차 검증은 항상 파트장 "박혜연" 명의로 고정
+    const V2_NAME="박혜연 확인 완료";
+    setApiRows(prev=>prev.map(r=>{
+      if(r.rowIndex!==row.rowIndex)return r;
+      if(!r.verify2Done)return{...r,verify2Done:true,verify2By:V2_NAME,verify2At:nowIso().slice(0,16).replace("T"," ")};
+      return{...r,verify2Done:false,verify2By:"",verify2At:""};
+    }));
+    try{await postAction({action:"verify2",rowIndex:row.rowIndex,verifyBy:V2_NAME})}catch(e){}
+    setVLoad(p=>({...p,[k]:false}));
+  }
+  async function submitNewRow(){
+    if(!newRow.targetName||!newRow.reflectMonth)return alert("급여반영월과 대상자는 필수입니다.");
+    setAddLoading(true);
+    try{await postAction({action:"append",...newRow});setApiRows(prev=>[...prev,{...newRow,rowIndex:prev.length+2,verify1Done:false,verify1By:"",verify1At:"",verify2Done:false,verify2By:"",verify2At:""}]);setNewRow({...EMPTY});setShowAdd(false);}
+    catch(e){alert("제출 실패: "+e.message)}
+    setAddLoading(false);
+  }
+  function downloadHistoryExcel(){
+    const headers=["급여반영월","작성자","담당자","반영/구분","사업부","사번","대상자","내용","금액","기타","1차검증_완료","1차검증_담당자","1차검증_일시","2차검증_완료","2차검증_담당자","2차검증_일시"];
+    const data=[headers];
+    filtered.forEach(r=>{
+      data.push([
+        r.reflectMonth||"",r.writer||"",r.manager||"",r.isReflected||"",
+        r.department||"",r.employeeId||"",r.targetName||"",r.content||"",
+        r.amount||"",r.etc||"",
+        r.verify1Done?"완료":"미완료",r.verify1By||"",String(r.verify1At||"").slice(0,16),
+        r.verify2Done?"완료":"미완료",r.verify2By||"",String(r.verify2At||"").slice(0,16),
+      ]);
+    });
+    const ws=XLSX.utils.aoa_to_sheet(data);
+    const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,"업무이력");
+    const today=new Date();const ds=today.getFullYear()+String(today.getMonth()+1).padStart(2,"0")+String(today.getDate()).padStart(2,"0");
+    XLSX.writeFile(wb,"업무이력_특이사항_관리_리스트_"+ds+".xlsx");
+  }
+
+  const DATA_COLS=[{key:"reflectMonth",label:"급여반영월",letter:"A",mw:90},{key:"writer",label:"작성자",letter:"B",mw:70},{key:"manager",label:"담당자",letter:"C",mw:80},{key:"isReflected",label:"반영/구분",letter:"D",mw:100,badge:true},{key:"department",label:"사업부",letter:"E",mw:70},{key:"employeeId",label:"사번",letter:"F",mw:80,mono:true},{key:"targetName",label:"대상자",letter:"G",mw:80},{key:"content",label:"내용",letter:"H",mw:150},{key:"amount",label:"금액",letter:"I",mw:90,amount:true},{key:"etc",label:"기타",letter:"J",mw:80}];
+  const TH={background:"var(--sky-d)",borderRight:"1px solid rgba(255,255,255,.15)",padding:"7px 10px",fontSize:10,fontWeight:700,color:"#fff",whiteSpace:"nowrap",textAlign:"left"};
+  const v1done=(apiRows||[]).filter(r=>r.verify1Done).length;const v2done=(apiRows||[]).filter(r=>r.verify2Done).length;
+  const isMR=r=>MOVE_TYPES.includes(String(r.isReflected||"").trim());
+  return <div className="fadein">
+    <div style={{padding:"9px 14px",borderRadius:9,border:"1px solid",marginBottom:12,display:"flex",alignItems:"center",gap:10,fontSize:11,background:apiStatus==="ok"?"#F0FDF4":apiStatus==="err"?"#FEF2F2":"var(--sky-l)",borderColor:apiStatus==="ok"?"#BBF7D0":apiStatus==="err"?"#FECACA":"var(--sky-m)",color:apiStatus==="ok"?"#16A34A":apiStatus==="err"?"#DC2626":"var(--sky-d)"}}>
+      <div style={{width:7,height:7,borderRadius:"50%",background:"currentColor",flexShrink:0,animation:apiStatus==="loading"?"pulse 1s infinite":"none"}}/>
+      <span style={{fontWeight:600}}>{apiStatus==="loading"?"로딩 중...":apiStatus==="ok"?("연결 완료 — 총 "+(apiRows||[]).length+"건 · 1차완료 "+v1done+"건 · 2차완료 "+v2done+"건"):apiStatus==="err"?"API 연결 실패":"API 대기 중"}</span>
+      <div style={{flex:1}}/>
+      <button className="btn btn-ghost btn-sm" onClick={()=>setShowUrlEdit(p=>!p)}>URL 설정</button>
+      <button className="btn btn-secondary btn-sm" onClick={()=>fetchData()}>새로고침</button>
+    </div>
+    {showUrlEdit&&<div style={{padding:"12px 16px",borderRadius:9,border:"1px solid var(--sky-m)",background:"var(--sky-l)",marginBottom:12,display:"flex",gap:8,alignItems:"flex-end"}}>
+      <div style={{flex:1}}><div className="inp-lbl">Google Apps Script 배포 URL</div><input className="inp" style={{fontSize:11}} value={apiUrl} onChange={e=>setApiUrl(e.target.value)}/></div>
+      <button className="btn btn-primary" onClick={()=>{fetchData(apiUrl);setShowUrlEdit(false)}}>저장 + 불러오기</button>
+    </div>}
+    <div className="card">
+      <div className="card-hd">
+        <div className="card-title"><div className="card-icon"><svg width="14" height="14" viewBox="0 0 20 20" fill="none"><rect x="2" y="2" width="16" height="16" rx="2" fill="#34A853"/><path d="M5 7h10M5 10h10M5 13h6" stroke="white" strokeWidth="1.5" strokeLinecap="round"/></svg></div>급여 특이사항 — Google Sheets 연동</div>
+        <div style={{display:"flex",gap:6,alignItems:"center"}}>
+          <div style={{display:"flex",alignItems:"center",gap:5,background:"var(--sky-l)",border:"1px solid var(--sky-m)",borderRadius:8,padding:"4px 10px"}}>
+            <span style={{fontSize:10,fontWeight:700,color:"var(--sky-d)"}}>검증자</span>
+            <input value={adminName} onChange={e=>setAdminName(e.target.value)} placeholder="박혜연" style={{fontSize:11,outline:"none",width:68,background:"transparent",color:"var(--text)",fontFamily:"inherit",border:"none"}}/>
+          </div>
+          <button className="btn btn-secondary btn-sm" onClick={downloadHistoryExcel}
+            style={{fontSize:10,display:"inline-flex",alignItems:"center",gap:4}}>
+            <svg width="12" height="12" viewBox="0 0 14 14" fill="none"><path d="M7 2v7M7 9l-3-3M7 9l3-3M2 12h10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+            엑셀 다운로드
+          </button>
+          <button className="btn btn-primary btn-sm" onClick={()=>setShowAdd(p=>!p)}>{showAdd?"X 닫기":"+ 신규 제출"}</button>
+        </div>
+      </div>
+      {showAdd&&<div style={{padding:"14px 18px",borderBottom:"1px solid var(--border)",background:"#F8FBFF"}}>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:8,marginBottom:10}}>
+          {DATA_COLS.map(c=><div key={c.key}><div className="inp-lbl">{c.letter+"열 · "+c.label}</div><input className="inp" style={{fontSize:11,padding:"6px 9px"}} placeholder={c.label} value={newRow[c.key]||""} onChange={e=>setNewRow(p=>({...p,[c.key]:e.target.value}))}/></div>)}
+        </div>
+        <div style={{display:"flex",justifyContent:"flex-end",gap:8}}>
+          <button className="btn btn-ghost btn-sm" onClick={()=>setShowAdd(false)}>취소</button>
+          <button className="btn btn-primary btn-sm" onClick={submitNewRow} disabled={addLoading}>{addLoading?"제출 중...":"Google Sheet에 제출"}</button>
+        </div>
+      </div>}
+      <div style={{padding:"8px 18px",borderBottom:"1px solid var(--border)",display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}}>
+        <select className="inp" style={{width:"auto",fontSize:11}} value={fMonth} onChange={e=>setFMonth(e.target.value)}><option value="ALL">월 전체</option>{months.map(m=><option key={m} value={m}>{m}</option>)}</select>
+        <select className="inp" style={{width:"auto",fontSize:11}} value={fMgr} onChange={e=>setFMgr(e.target.value)}><option value="ALL">담당자 전체</option>{managers.map(m=><option key={m} value={m}>{m}</option>)}</select>
+        <select className="inp" style={{width:"auto",fontSize:11}} value={fRefl} onChange={e=>setFRefl(e.target.value)}><option value="ALL">구분 전체</option>{reflOpts.map(r=><option key={r} value={r}>{r}</option>)}</select>
+        <button className="btn btn-ghost btn-sm" onClick={()=>{setFMonth("ALL");setFMgr("ALL");setFRefl("ALL")}}>초기화</button>
+      </div>
+      <div style={{padding:"0 18px 16px"}}>
+        <div className="xwrap" style={{marginTop:10}}>
+          <table className="xtbl">
+            <thead>
+              <tr><th className="xcl" style={{minWidth:36}}>#</th>{DATA_COLS.map(c=><th key={c.key} className="xcl" style={{minWidth:c.mw}}>{c.letter}</th>)}<th className="xcl" style={{minWidth:110,background:"#E0E7FF",color:"#4F46E5",fontWeight:800}}>K</th><th className="xcl" style={{minWidth:110,background:"#D1FAE5",color:"#059669",fontWeight:800}}>L</th></tr>
+              <tr><th style={{...TH,textAlign:"center",minWidth:36}}>행</th>{DATA_COLS.map(c=><th key={c.key} style={{...TH,minWidth:c.mw}}>{c.label}</th>)}<th style={{...TH,background:"#4F46E5",minWidth:110}}>1차 검증</th><th style={{...TH,background:"#059669",minWidth:110}}>2차 검증</th></tr>
+            </thead>
+            <tbody>
+              {filtered.length===0?<tr><td colSpan={DATA_COLS.length+3} style={{textAlign:"center",padding:30,color:"var(--t3)",fontSize:12}}>{apiStatus==="loading"?"로딩 중...":apiStatus==="err"?"API 연결 실패":"데이터 없음"}</td></tr>:
+              filtered.map((row,ri)=>{
+                const v1=!!row.verify1Done,v2=!!row.verify2Done;const v1k="v1_"+row.rowIndex,v2k="v2_"+row.rowIndex;
+                return <tr key={ri} className={v2?"row-v2":""}  style={{background:isMR(row)?"rgba(14,165,233,.03)":"transparent"}}>
+                  <td className="rnum">{ri+1}</td>
+                  {DATA_COLS.map(c=><td key={c.key} style={{minWidth:c.mw,maxWidth:c.key==="content"?180:undefined}}>
+                    {c.badge?(isMR(row)?<span className={"badge "+(TYPE_S[String(row[c.key]||"")]?TYPE_S[String(row[c.key]||"")].cls:"bdg-gray")} style={{fontSize:10}}>{row[c.key]||"—"}</span>:<span className="badge bdg-gray" style={{fontSize:10}}>{row[c.key]||"—"}</span>)
+                    :c.amount?<span style={{fontFamily:"'DM Mono',monospace",fontWeight:700,color:"var(--sky-d)"}}>{fmtAmt(row[c.key])}</span>
+                    :c.mono?<span style={{fontFamily:"'DM Mono',monospace",fontSize:11}}>{row[c.key]||"—"}</span>
+                    :<span style={{display:"block",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{fmtCell(row[c.key])}</span>}
+                  </td>)}
+                  <td style={{minWidth:110,background:v1?"#EEF2FF":"transparent"}}>
+                    <div style={{display:"flex",flexDirection:"column",gap:3}}>
+                      <div style={{display:"flex",alignItems:"center",gap:6}}>
+                        <button onClick={()=>toggleV1(row)} disabled={!!vLoad[v1k]} style={{width:16,height:16,borderRadius:4,border:"1.5px solid "+(v1?"#6366F1":"#CBD5E1"),background:v1?"#6366F1":"transparent",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",flexShrink:0}}>
+                          {v1&&<svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 5l2.5 2.5 4-4" stroke="white" strokeWidth="1.8" strokeLinecap="round"/></svg>}
+                        </button>
+                        <span style={{fontSize:10.5,fontWeight:700,color:v1?"#4F46E5":"var(--t3)"}}>{vLoad[v1k]?"...":v1?(row.verify1By||"완료"):"미완료"}</span>
+                      </div>
+                      {v1&&<div style={{fontSize:9.5,color:"#6366F1",paddingLeft:22}}><div>{row.verify1By||"—"}</div><div style={{color:"var(--t3)"}}>{String(row.verify1At||"").slice(0,16)}</div></div>}
+                    </div>
+                  </td>
+                  <td style={{minWidth:110,background:v2?"#ECFDF5":(!v1?"#F8FAFC":"transparent")}}>
+                    <div style={{display:"flex",flexDirection:"column",gap:3}}>
+                      <div style={{display:"flex",alignItems:"center",gap:6}}>
+                        <button onClick={()=>toggleV2(row)} disabled={!v1||!!vLoad[v2k]} style={{width:16,height:16,borderRadius:4,border:"1.5px solid "+(v2?"#10B981":(!v1?"#E2E8F0":"#CBD5E1")),background:v2?"#10B981":"transparent",display:"flex",alignItems:"center",justifyContent:"center",cursor:v1?"pointer":"not-allowed",flexShrink:0,opacity:!v1?0.4:1}}>
+                          {v2&&<svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 5l2.5 2.5 4-4" stroke="white" strokeWidth="1.8" strokeLinecap="round"/></svg>}
+                        </button>
+                        <span style={{fontSize:10.5,fontWeight:700,color:v2?"#059669":(!v1?"#CBD5E1":"var(--t3)")}}>{vLoad[v2k]?"...":v2?(row.verify2By||"완료"):(!v1?"대기":"미완료")}</span>
+                      </div>
+                      {v2&&<div style={{fontSize:9.5,color:"#059669",paddingLeft:22}}><div>{row.verify2By||"—"}</div><div style={{color:"var(--t3)"}}>{String(row.verify2At||"").slice(0,16)}</div></div>}
+                      {!v1&&!v2&&<div style={{fontSize:9.5,color:"#CBD5E1",paddingLeft:22}}>1차 완료 후 가능</div>}
+                    </div>
+                  </td>
+                </tr>;
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>;
+}
+
+// ── PageMemo — 특이사항 관리 ─────────────────────────────────────────────────
+const MEMO_LS_KEY="hr_shine_memos_v1";
+const MEMO_CATS=["일반 메모","노무/법적 이슈","임직원 요청","시스템 에러","제도 변경"];
+const CAT_CLR={"일반 메모":"#64748B","노무/법적 이슈":"#DC2626","임직원 요청":"#0EA5E9","시스템 에러":"#D97706","제도 변경":"#8B5CF6"};
+
+function loadMemos(){const m=SheetDB.get("memos");return Array.isArray(m)?m:[];}
+function saveMemos(m){SheetDB.setCollection("memos",m||[]);}
+
+function PageMemo({selectedDate}){
+  const[memos,setMemos]=useState(()=>loadMemos());
+  const[author,setAuthor]=useState("");
+  const[cat,setCat]=useState(MEMO_CATS[0]);
+  const[date,setDate]=useState(selectedDate||todayStr);
+  const[content,setContent]=useState("");
+  const[remark,setRemark]=useState("");
+  const[err,setErr]=useState("");
+  const[filterCat,setFilterCat]=useState("ALL");
+  const[filterDate,setFilterDate]=useState("");
+
+  useEffect(()=>{setDate(selectedDate||todayStr)},[selectedDate]);
+  useSkipFirstEffect(()=>{saveMemos(memos)},[memos]);
+
+  function addMemo(){
+    if(!author.trim()){setErr("작성자를 입력해주세요.");return;}
+    if(!content.trim()){setErr("업무 내용을 입력해주세요.");return;}
+    const m={id:uid(),author:author.trim(),cat,date,content:content.trim(),remark:remark.trim(),createdAt:nowIso()};
+    setMemos(p=>[m,...(p||[])]);
+    setContent("");setRemark("");setErr("");
+  }
+  function delMemo(id){if(confirm("이 메모를 삭제할까요?"))setMemos(p=>(p||[]).filter(m=>m.id!==id))}
+
+  const filtered=(memos||[]).filter(m=>{
+    if(filterCat!=="ALL"&&m.cat!==filterCat)return false;
+    if(filterDate&&m.date!==filterDate)return false;
+    return true;
+  });
+
+  const TH={background:"var(--sky-d)",borderRight:"1px solid rgba(255,255,255,.15)",padding:"7px 10px",fontSize:10,fontWeight:700,color:"#fff",whiteSpace:"nowrap",textAlign:"left"};
+
+  function downloadMemoExcel(){
+    const headers=["작성자","카테고리","일자","업무 내용","비고","등록일시"];
+    const data=[headers];
+    (memos||[]).forEach(m=>{
+      data.push([m.author||"",m.cat||"",m.date||"",m.content||"",m.remark||"",String(m.createdAt||"").slice(0,16).replace("T"," ")]);
+    });
+    const ws=XLSX.utils.aoa_to_sheet(data);
+    // Auto-width approximation
+    const colWidths=[{wch:12},{wch:18},{wch:12},{wch:50},{wch:25},{wch:18}];
+    ws["!cols"]=colWidths;
+    const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,"특이사항");
+    const d=new Date();const ds=d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+    XLSX.writeFile(wb,"특이사항_관리_내역_리스트_"+ds+".xlsx");
+  }
+
+  return <div className="fadein">
+    <div className="card" style={{marginBottom:14}}>
+      <div className="card-hd">
+        <div className="card-title">
+          <div className="card-icon"><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><rect x="2" y="2" width="12" height="12" rx="2" stroke="#0EA5E9" strokeWidth="1.3"/><path d="M5 6h6M5 9h4" stroke="#0EA5E9" strokeWidth="1.2" strokeLinecap="round"/></svg></div>
+          특이사항 입력
+        </div>
+        <span style={{fontSize:10,color:"var(--t3)"}}>{"총 "+(memos||[]).length+"건 저장됨"}</span>
+      </div>
+      <div className="card-body">
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10,marginBottom:10}}>
+          <div><div className="inp-lbl">작성자</div><input className="inp" placeholder="예: 박혜연" value={author} onChange={e=>setAuthor(e.target.value)}/></div>
+          <div><div className="inp-lbl">카테고리</div>
+            <input className="inp" placeholder="예: 노무 이슈, 일반 메모 등" value={cat} onChange={e=>setCat(e.target.value)} list="memo-cat-hints"/>
+            <datalist id="memo-cat-hints">{MEMO_CATS.map(c=><option key={c} value={c}/>)}</datalist>
+          </div>
+          <div><div className="inp-lbl">일자</div><input type="date" className="inp" value={date} onChange={e=>setDate(e.target.value)}/></div>
+        </div>
+        <div style={{display:"grid",gridTemplateColumns:"2fr 1fr",gap:10,marginBottom:10}}>
+          <div><div className="inp-lbl">업무 내용</div><input className="inp" placeholder="특이사항 내용을 입력하세요" value={content} onChange={e=>setContent(e.target.value)} onKeyDown={e=>e.key==="Enter"&&addMemo()}/></div>
+          <div><div className="inp-lbl">비고</div><input className="inp" placeholder="추가 메모 (선택)" value={remark} onChange={e=>setRemark(e.target.value)} onKeyDown={e=>e.key==="Enter"&&addMemo()}/></div>
+        </div>
+        {err&&<div style={{fontSize:11,color:"#DC2626",background:"#FEF2F2",border:"1px solid #FECACA",borderRadius:8,padding:"7px 12px",marginBottom:8}}>{err}</div>}
+        <div style={{display:"flex",justifyContent:"flex-end"}}>
+          <button className="btn btn-primary" onClick={addMemo}>+ 특이사항 등록</button>
+        </div>
+      </div>
+    </div>
+
+    <div className="card">
+      <div className="card-hd">
+        <div className="card-title">
+          <div className="card-icon"><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M2 4h12M2 8h8M2 12h10" stroke="#0EA5E9" strokeWidth="1.3" strokeLinecap="round"/></svg></div>
+          {"특이사항 목록 — "+filtered.length+"건"}
+        </div>
+        <div style={{display:"flex",gap:6,alignItems:"center"}}>
+          <button className="btn btn-secondary btn-sm" onClick={downloadMemoExcel}
+            style={{fontSize:10,display:"inline-flex",alignItems:"center",gap:4}}>
+            <svg width="12" height="12" viewBox="0 0 14 14" fill="none"><path d="M7 2v7M7 9l-3-3M7 9l3-3M2 12h10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+            엑셀 다운로드
+          </button>
+          <select className="inp" style={{width:"auto",fontSize:11}} value={filterCat} onChange={e=>setFilterCat(e.target.value)}>
+            <option value="ALL">카테고리 전체</option>
+            {MEMO_CATS.map(c=><option key={c} value={c}>{c}</option>)}
+          </select>
+          <input type="date" className="inp" style={{width:"auto",fontSize:11}} value={filterDate} onChange={e=>setFilterDate(e.target.value)} title="날짜 필터"/>
+          {(filterCat!=="ALL"||filterDate)&&<button className="btn btn-ghost btn-sm" onClick={()=>{setFilterCat("ALL");setFilterDate("")}}>초기화</button>}
+        </div>
+      </div>
+      <div className="card-body" style={{padding:0}}>
+        <div className="xwrap" style={{border:"none",borderRadius:0}}>
+          <table className="xtbl" style={{minWidth:800}}>
+            <thead>
+              <tr>
+                <th className="xcl" style={{minWidth:36}}>#</th>
+                <th style={{...TH,minWidth:80}}>작성자</th>
+                <th style={{...TH,minWidth:110}}>카테고리</th>
+                <th style={{...TH,minWidth:100}}>일자</th>
+                <th style={{...TH,minWidth:260}}>업무 내용</th>
+                <th style={{...TH,minWidth:150}}>비고</th>
+                <th style={{...TH,minWidth:50,textAlign:"center"}}>삭제</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.length===0?<tr><td colSpan={7} style={{textAlign:"center",padding:32,color:"var(--t3)",fontSize:12}}>등록된 특이사항이 없습니다. 위 양식으로 추가해주세요.</td></tr>:
+              filtered.map((m,ri)=>{
+                const clr=CAT_CLR[m.cat]||"#64748B";
+                return <tr key={m.id}>
+                  <td className="rnum">{ri+1}</td>
+                  <td style={{fontWeight:600}}>{m.author}</td>
+                  <td><span style={{fontSize:9.5,padding:"2px 8px",borderRadius:20,background:clr+"18",color:clr,fontWeight:700,border:"1px solid "+clr+"30",whiteSpace:"nowrap"}}>{m.cat}</span></td>
+                  <td className="mono" style={{fontSize:11}}>{m.date}</td>
+                  <td style={{maxWidth:260}}><span style={{display:"block",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{m.content}</span></td>
+                  <td style={{color:"var(--t3)",maxWidth:150}}><span style={{display:"block",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{m.remark||"—"}</span></td>
+                  <td style={{textAlign:"center"}}>
+                    <button onClick={()=>delMemo(m.id)} style={{width:24,height:24,borderRadius:6,border:"1px solid #FECACA",background:"#FEF2F2",color:"#EF4444",cursor:"pointer",fontSize:11,display:"inline-flex",alignItems:"center",justifyContent:"center"}}>×</button>
+                  </td>
+                </tr>;
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>;
+}
+
+// ── GuideModal — 도움말 (User Editable) ──────────────────────────────────────
+const GUIDE_LS_KEY="hr_shine_guide_text";
+const DEFAULT_GUIDE=`HR SHINE DESK v15 사용 가이드
+
+[ 전체 워크플로우 ]
+달력 기반 To-Do 모니터링과 당일/당월 진행률을 한눈에 확인합니다.
+캘린더 날짜를 클릭하면 해당 날짜의 일정과 담당자를 확인할 수 있습니다.
++ 일정 추가: 일회성 또는 반복 정기 일정을 생성합니다.
+정기 일정 관리: 월간/분기별/반기별/연간 주기 일정을 관리합니다.
+
+[ 인사이동 관리 ]
+Google Sheets 데이터를 기반으로 입사/퇴사/육아휴직 등 인사이동 대상자를
+자동 필터링하여 표시합니다. 행을 클릭하면 담당자별 체크리스트가 열립니다.
+공통 루틴 설정: 유형별 공통 체크리스트 항목을 전체 적용합니다.
+
+[ 팀원별 진척도 ]
+날짜 네비게이터로 날짜를 이동하며 팀원별 당일 일정 진행 현황을 확인합니다.
+각 카드에서 체크박스로 완료 여부를 실시간으로 업데이트할 수 있습니다.
+
+[ 업무 이력 ]
+Google Sheets와 실시간 연동하여 급여 특이사항 데이터를 조회합니다.
+1차/2차 검증 버튼으로 데이터 검토 상태를 관리합니다.
+
+[ 특이사항 관리 ]
+HR 업무 중 발생하는 메모, 이슈, 요청사항을 카테고리별로 기록합니다.
+모든 데이터는 구글 스프레드시트에 실시간으로 공유 저장되어, 팀원 누구나 동일한 데이터를 보고 함께 편집할 수 있습니다.`;
+
+function loadGuide(){const g=SheetDB.get("guide");return(typeof g==="string"&&g)?g:DEFAULT_GUIDE;}
+function saveGuide(t){SheetDB.setCollection("guide",t);}
+
+function GuideModal({onClose}){
+  const[editing,setEditing]=useState(false);
+  const[text,setText]=useState(()=>loadGuide());
+  const[saved,setSaved]=useState(false);
+
+  function handleSave(){saveGuide(text);setSaved(true);setEditing(false);setTimeout(()=>setSaved(false),2000)}
+  function handleReset(){if(confirm("기본 가이드로 초기화할까요?"))setText(DEFAULT_GUIDE)}
+
+  return <div className="modal-ov" onClick={onClose}>
+    <div className="modal-box fadein" style={{width:"min(700px,96vw)"}} onClick={e=>e.stopPropagation()}>
+      <div className="modal-hd">
+        <div>
+          <div className="modal-title">HR SHINE DESK 사용 가이드</div>
+          <div className="modal-sub">v15 · 클릭하여 내용을 자유롭게 수정할 수 있습니다</div>
+        </div>
+        <div style={{display:"flex",gap:6,alignItems:"center"}}>
+          {saved&&<span style={{fontSize:11,color:"#16A34A",fontWeight:700}}>저장 완료!</span>}
+          {editing?<>
+            <button className="btn btn-ghost btn-sm" onClick={handleReset} style={{fontSize:10}}>초기화</button>
+            <button className="btn btn-primary btn-sm" onClick={handleSave}>저장</button>
+            <button className="btn btn-ghost btn-sm" onClick={()=>setEditing(false)}>취소</button>
+          </>:
+          <button className="btn btn-secondary btn-sm" onClick={()=>setEditing(true)}>수정하기</button>}
+          <button onClick={onClose} style={{width:28,height:28,borderRadius:8,border:"1px solid var(--border2)",background:"var(--sky-l)",color:"var(--t2)",cursor:"pointer",fontSize:14,display:"flex",alignItems:"center",justifyContent:"center"}}>X</button>
+        </div>
+      </div>
+      <div style={{padding:"20px 24px"}}>
+        {editing?
+          <textarea value={text} onChange={e=>setText(e.target.value)} style={{width:"100%",minHeight:420,fontSize:12.5,lineHeight:1.7,fontFamily:"'Noto Sans KR',system-ui,sans-serif",color:"var(--text)",border:"1.5px solid var(--sky)",borderRadius:10,padding:"14px 16px",resize:"vertical",outline:"none",background:"var(--s2)"}}/>:
+          <pre style={{fontSize:12.5,lineHeight:1.8,color:"var(--text)",fontFamily:"'Noto Sans KR',system-ui,sans-serif",whiteSpace:"pre-wrap",wordBreak:"break-word",background:"var(--bg)",borderRadius:10,padding:"16px 18px",border:"1px solid var(--border)"}}>{text}</pre>
+        }
+        {!editing&&<div style={{marginTop:12,fontSize:11,color:"var(--t3)",textAlign:"center"}}>수정하기 버튼을 클릭하면 내용을 자유롭게 편집할 수 있습니다</div>}
+      </div>
+    </div>
+  </div>;
+}
+
+
+
+// ── Google Drive 연동 (GAS 경유) ────────────────────────────────────────────
+const GAS_DRIVE_URL = API_URL; // 4대보험 원본 파일 업로드도 동일한 Web App(GAS)을 통해 처리
+
+async function driveUploadFile(file, curYM) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      try {
+        const base64 = e.target.result.split(",")[1];
+        const res = await fetch(GAS_DRIVE_URL, {
+          method: "POST",
+          mode: "no-cors",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify({
+            action: "uploadFile",
+            fileName: file.name,
+            base64Data: base64,
+            mimeType: file.type || "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            subFolderName: curYM,
+          }),
+        });
+        // no-cors returns opaque response; assume success if no error thrown
+        resolve({ ok: true, fileName: file.name });
+      } catch (err) {
+        reject(err);
+      }
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+async function driveFetchFileList(curYM) {
+  try {
+    const res = await fetch(GAS_DRIVE_URL + "?action=listFiles&subFolderName=" + encodeURIComponent(curYM));
+    if (!res.ok) return [];
+    const data = await res.json();
+    return data.files || [];
+  } catch {
+    return [];
+  }
+}
+
+// ── Page4보험 — 4대보험 검증 ─────────────────────────────────────────────────
+const INS_LS_PREFIX="hr_shine_4ins_";
+const INS_REASONS=["전월반영","차월반영","중도퇴사정산","직접입력"];
+const INS_TYPES=["건강보험","국민연금"];
+
+function fmtNum(v){if(v===null||v===undefined||v==="")return 0;const n=Number(String(v).replace(/,/g,"").replace(/\s/g,"").trim());return isNaN(n)?0:n;}
+function fmtKRW(v){return Number(v||0).toLocaleString("ko-KR");}
+function maskRRN(v){
+  const s=String(v||"").replace(/-/g,"").replace(/\s/g,"");
+  if(s.length>=13)return s.slice(0,6)+"-"+s[6]+"******";
+  if(s.length>=7)return s.slice(0,6)+"-"+"*".repeat(s.length-6);
+  return v;
+}
+function getInsKey(ym){return INS_LS_PREFIX+ym;}
+function loadInsData(ym){const d=SheetDB.getIns(ym);return d||null;}
+function saveInsData(ym,data){SheetDB.setCollection("ins:"+ym,data);}
+function deleteInsData(ym){SheetDB.setCollection("ins:"+ym,null);}
+
+function detectInsType(data){
+  // Robust detection: scan more rows, check both signature columns
+  // Health uses: G(6)=name, AM(38)=health amount
+  // Pension uses: C(2)=name, S(18)=pension amount
+  // Also check header text (row 0) first as most reliable signal
+  const h0=String((data[0]||[]).join("|"));
+  if(/국민연금|연금보험/.test(h0))return "국민연금";
+  if(/건강보험|요양보험/.test(h0))return "건강보험";
+  // Scan data rows (skip row 0 header)
+  let healthScore=0, pensionScore=0;
+  for(let i=1;i<Math.min(10,data.length);i++){
+    const r=data[i]||[];
+    if(fmtNum(r[38])>1000)healthScore+=2;   // AM col: health insurance
+    if(fmtNum(r[18])>1000)pensionScore+=2;  // S col: pension
+    if(fmtNum(r[6])===0&&fmtNum(r[2])>0)pensionScore++;  // G empty, C has name
+    if(String(r[6]||"").trim().length>0)healthScore++;    // G has name → health
+  }
+  return pensionScore>healthScore?"국민연금":"건강보험";
+}
+
+function parsePubHealth(data){
+  // Skip row 0 (header). Accumulate amounts for duplicate RRNs within the same file.
+  const rrnMap={};
+  for(let i=1;i<data.length;i++){
+    const r=data[i];
+    if(!r||!r[6]||String(r[6]).trim()==="")continue;
+    const key=String(r[7]||"").trim().replace(/-/g,"")||"_"+String(r[6]).trim()+i;
+    if(rrnMap[key]){
+      // Accumulate: same person appears multiple times → sum all amounts
+      rrnMap[key].health    +=fmtNum(r[38]);
+      rrnMap[key].care      +=fmtNum(r[39]);
+      rrnMap[key].healthAdj +=fmtNum(r[40])+fmtNum(r[42]);
+      rrnMap[key].careAdj   +=fmtNum(r[41])+fmtNum(r[43]);
+    }else{
+      rrnMap[key]={
+        yearMonth:String(r[0]||"").trim(),name:String(r[6]||"").trim(),
+        rrn:String(r[7]||"").trim(),dept:String(r[8]||"").trim(),empId:String(r[9]||"").trim(),
+        health:fmtNum(r[38]),care:fmtNum(r[39]),
+        healthAdj:fmtNum(r[40])+fmtNum(r[42]),careAdj:fmtNum(r[41])+fmtNum(r[43]),
+        pension:0,insType:"건강보험",
+      };
+    }
+  }
+  return Object.values(rrnMap);
+}
+
+function parsePubPension(data){
+  // Accumulate pension amounts for duplicate RRNs within the same file.
+  const rrnMap={};
+  for(let i=1;i<data.length;i++){
+    const r=data[i];
+    if(!r||!r[2]||String(r[2]).trim()==="")continue;
+    const key=String(r[3]||"").trim().replace(/-/g,"")||"_"+String(r[2]).trim()+i;
+    if(rrnMap[key]){
+      rrnMap[key].pension+=fmtNum(r[18]);
+    }else{
+      rrnMap[key]={
+        yearMonth:String(r[0]||"").trim(),name:String(r[2]||"").trim(),
+        rrn:String(r[3]||"").trim(),dept:String(r[4]||"").trim(),empId:String(r[5]||"").trim(),
+        health:0,care:0,healthAdj:0,careAdj:0,
+        pension:fmtNum(r[18]),insType:"국민연금",
+      };
+    }
+  }
+  return Object.values(rrnMap);
+}
+
+function parsePay(data){
+  const rows=[];
+  for(let i=1;i<data.length;i++){
+    const r=data[i];
+    if(!r||!r[2]||String(r[2]).trim()==="")continue;
+    rows.push({
+      yearMonth:String(r[0]||"").trim(),empId:String(r[1]||"").trim(),
+      name:String(r[2]||"").trim(),rrn:String(r[3]||"").trim(),dept:String(r[10]||"").trim(),
+      pension:fmtNum(r[4])+fmtNum(r[5]),  // E(연금)+F(연금정산) 합산
+      health:fmtNum(r[6]),care:fmtNum(r[8]),
+      healthAdj:fmtNum(r[7]),careAdj:fmtNum(r[9]),
+    });
+  }
+  return rows;
+}
+
+function mergeData(pubRows,payRows){
+  const payMap={};
+  payRows.forEach(r=>{const k=String(r.rrn).replace(/-/g,"").replace(/\s/g,"");if(k)payMap[k]=r});
+  const rows=pubRows.map(pub=>{
+    const k=String(pub.rrn).replace(/-/g,"").replace(/\s/g,"");
+    const pay=payMap[k]||null;
+    const diffHealth=pub.health-(pay?pay.health:0);
+    const diffCare=pub.care-(pay?pay.care:0);
+    const diffHealthAdj=pub.healthAdj-(pay?pay.healthAdj:0);
+    const diffCareAdj=pub.careAdj-(pay?pay.careAdj:0);
+    const diffPension=pub.pension-(pay?pay.pension:0);
+    const mismatch=diffHealth!==0||diffCare!==0||diffHealthAdj!==0||diffCareAdj!==0||diffPension!==0;
+    return{...pub,pay,diffHealth,diffCare,diffHealthAdj,diffCareAdj,diffPension,mismatch,autoOk:!mismatch,id:k||pub.name+pub.empId};
+  });
+  // Mismatch first, then normal (both sorted by name within group)
+  rows.sort((a,b)=>{
+    if(b.mismatch!==a.mismatch)return(b.mismatch?1:0)-(a.mismatch?1:0);
+    return(a.name||"").localeCompare(b.name||"","ko");
+  });
+  return rows;
+}
+
+function Page4Insurance(){
+  const nowYM=()=>{const d=new Date();return d.getFullYear()+"."+(String(d.getMonth()+1).padStart(2,"0"))};
+  const[curYM,setCurYM]=useState(nowYM);
+  const[pubTypeOverride,setPubTypeOverride]=useState("auto");
+  const[merged,setMerged]=useState([]);
+  const[hasData,setHasData]=useState(false);
+  const[reasons,setReasons]=useState({});
+  const[customReasons,setCustomReasons]=useState({});
+  const[checked,setChecked]=useState({});
+  const[loading,setLoading]=useState("");
+  const[error,setError]=useState("");
+  const[deptView,setDeptView]=useState("전체");
+  const[deptDeleteSel,setDeptDeleteSel]=useState("");
+  const[rawPub,setRawPub]=useState([]);
+  const[rawPay,setRawPay]=useState([]);
+  const isLoadingRef=useRef(false); // blocks save during month-switch load
+  const[driveFiles,setDriveFiles]=useState([]);
+  const[driveUploading,setDriveUploading]=useState(false);
+  const[driveStatus,setDriveStatus]=useState(""); // "", "uploading", "done", "err"
+  const[showDrivePanel,setShowDrivePanel]=useState(false);
+
+  // Navigate months
+  function shiftMonth(dir){
+    const[y,m]=curYM.split(".").map(Number);
+    let nm=m+dir;let ny=y;
+    if(nm>12){nm=1;ny++;}else if(nm<1){nm=12;ny--;}
+    setCurYM(ny+"."+(String(nm).padStart(2,"0")));
+  }
+
+  // Load from localStorage when curYM changes
+  // isLoadingRef blocks the save useEffect from writing stale data during transition
+  useEffect(()=>{
+    isLoadingRef.current=true;  // lock: prevent save firing with old-month data
+    const saved=loadInsData(curYM);
+    if(saved){
+      const pub=saved.pub||[];const pay=saved.pay||[];
+      const m=mergeData(pub,pay);
+      const savedChecked=saved.checked||{};
+      const autoChecked={...savedChecked};
+      m.forEach(r=>{if(r.autoOk)autoChecked[r.id]=true;});
+      // Batch all state updates so React processes them together
+      setRawPub(pub);setRawPay(pay);
+      setReasons(saved.reasons||{});setCustomReasons(saved.custom||{});
+      setChecked(autoChecked);setMerged(m);setHasData(true);
+    }else{
+      // New month: start with completely empty state
+      setRawPub([]);setRawPay([]);
+      setReasons({});setCustomReasons({});setChecked({});
+      setMerged([]);setHasData(false);
+    }
+    setError("");
+    // Release lock after React flushes state updates (next microtask)
+    setTimeout(()=>{isLoadingRef.current=false;},0);
+    // Refresh Drive file list for new month (best-effort)
+    setDriveFiles([]);
+    driveFetchFileList(curYM).then(files=>setDriveFiles(files)).catch(()=>{});
+  },[curYM]);
+
+  // Auto-check zero-diff rows; save whenever data/reasons/checked change
+  useEffect(()=>{
+    if(merged.length>0){
+      // Auto-complete any newly calculated zero-diff rows
+      setChecked(prev=>{
+        let changed=false;const next={...prev};
+        merged.forEach(r=>{if(r.autoOk&&!next[r.id]){next[r.id]=true;changed=true;}});
+        return changed?next:prev;
+      });
+    }
+  },[merged]);
+  useSkipFirstEffect(()=>{
+    // Skip saving while a month-switch load is in progress (prevents cross-month pollution)
+    if(isLoadingRef.current)return;
+    if(rawPub.length>0||rawPay.length>0){
+      saveInsData(curYM,{pub:rawPub,pay:rawPay,reasons,custom:customReasons,checked});
+    }
+  },[rawPub,rawPay,reasons,customReasons,checked,curYM]);
+
+  function readExcel(file,cb){
+    const reader=new FileReader();
+    reader.onload=e=>{
+      try{
+        const wb=XLSX.read(e.target.result,{type:"array"});
+        const ws=wb.Sheets[wb.SheetNames[0]];
+        const data=XLSX.utils.sheet_to_json(ws,{header:1,defval:""});
+        cb(data);
+      }catch(ex){setError("파일 읽기 실패: "+ex.message);setLoading("");}
+    };
+    reader.readAsArrayBuffer(file);
+  }
+
+  function handlePub(e){
+    const f=e.target.files[0];if(!f)return;
+    setLoading("공단 고지서 처리 중...");setError("");
+    readExcel(f,data=>{
+      // Strict mode: user selection overrides auto-detect completely
+      const insType=pubTypeOverride==="auto"?detectInsType(data):pubTypeOverride;
+      const newRows=insType==="국민연금"?parsePubPension(data):parsePubHealth(data);
+      // Accumulate by RRN — different depts uploaded separately all survive
+      setRawPub(prev=>{
+        const rrnMap={};
+        // Preserve all existing rows first (all depts)
+        prev.forEach(r=>{
+          const k=String(r.rrn).replace(/-/g,"").replace(/\s/g,"");
+          rrnMap[k||"_"+r.name+r.empId]={...r};
+        });
+        // Merge new rows: only overwrite fields of the same insurance type
+        newRows.forEach(r=>{
+          const k=String(r.rrn).replace(/-/g,"").replace(/\s/g,"");
+          const key=k||"_"+r.name+r.empId;
+          if(rrnMap[key]){
+            const existing=rrnMap[key];
+            if(insType==="국민연금"){
+              // Keep health fields from existing, update pension
+              rrnMap[key]={...existing,pension:r.pension,
+                insType:existing.insType==="건강보험"?"건강+연금":"국민연금"};
+            }else{
+              // Keep pension from existing, update health fields
+              rrnMap[key]={...existing,health:r.health,care:r.care,
+                healthAdj:r.healthAdj,careAdj:r.careAdj,
+                name:r.name,dept:r.dept,empId:r.empId,yearMonth:r.yearMonth,
+                insType:existing.insType==="국민연금"?"건강+연금":"건강보험"};
+            }
+          }else{
+            rrnMap[key]={...r};
+          }
+        });
+        const next=Object.values(rrnMap);
+        const m=mergeData(next,rawPay);setMerged(m);setHasData(true);setLoading("");
+        return next;
+      });
+    });
+   
+    // Fire-and-forget Drive upload
+    if(GAS_DRIVE_URL&&GAS_DRIVE_URL!=="여기에_GAS_배포_URL_입력"){setDriveUploading(true);setDriveStatus("uploading");driveUploadFile(f,curYM).then(()=>{setDriveStatus("done");driveFetchFileList(curYM).then(setDriveFiles);}).catch(()=>setDriveStatus("err")).finally(()=>setDriveUploading(false));}
+    e.target.value="";
+  }
+  function handlePay(e){
+    const f=e.target.files[0];if(!f)return;
+    setLoading("급여대장 처리 중...");setError("");
+    readExcel(f,data=>{
+      // parsePay reads G(건강)+I(요양)+H(건강정산)+J(요양정산)+E(연금) all at once
+      // Accumulate pay by RRN same as pub — multiple depts survive
+      const newPayRows=parsePay(data);
+      setRawPay(prev=>{
+        const rrnMap={};
+        prev.forEach(r=>{const k=String(r.rrn).replace(/-/g,"").replace(/\s/g,"");rrnMap[k||"_"+r.name]=r;});
+        newPayRows.forEach(r=>{
+          const k=String(r.rrn).replace(/-/g,"").replace(/\s/g,"");
+          // Overwrite entire row for this RRN (pay file is source of truth for all pay columns)
+          rrnMap[k||"_"+r.name]={...r};
+        });
+        const next=Object.values(rrnMap);
+        const m=mergeData(rawPub,next);setMerged(m);setHasData(true);setLoading("");
+        return next;
+      });
+    });
+    // Fire-and-forget Drive upload
+    if(GAS_DRIVE_URL&&GAS_DRIVE_URL!=="여기에_GAS_배포_URL_입력"){setDriveUploading(true);setDriveStatus("uploading");driveUploadFile(f,curYM).then(()=>{setDriveStatus("done");driveFetchFileList(curYM).then(setDriveFiles);}).catch(()=>setDriveStatus("err")).finally(()=>setDriveUploading(false));}
+    e.target.value="";
+  }
+
+  function handleDelete(){
+    if(!confirm(curYM+" 데이터를 모두 삭제할까요?"))return;
+    deleteInsData(curYM);
+    setRawPub([]);setRawPay([]);setReasons({});setCustomReasons({});setChecked({});setMerged([]);setHasData(false);
+  }
+
+  // Delete only rows matching a specific dept from current month
+  function handleDeptDelete(){
+    if(!deptDeleteSel){alert("삭제할 사업부를 선택해주세요.");return;}
+    if(!confirm(curYM+" 데이터에서 "+deptDeleteSel+" 사업부를 삭제할까요?"))return;
+    const nextPub=rawPub.filter(r=>(r.dept||"미분류")!==deptDeleteSel);
+    const nextPay=rawPay.filter(r=>(r.dept||"미분류")!==deptDeleteSel);
+    setRawPub(nextPub);setRawPay(nextPay);
+    const m=mergeData(nextPub,nextPay);setMerged(m);
+    if(nextPub.length===0&&nextPay.length===0){deleteInsData(curYM);setHasData(false);}
+    setDeptDeleteSel("");
+  }
+
+  // Download sample Excel templates using SheetJS
+  function downloadSample(type){
+    let headers,sampleRow,sheetName;
+    if(type==="건강보험"){
+      headers=["A고지년월","...","...","...","...","...","G이름","H주민번호","I사업부","J사번",
+        "...","...","...","...","...","...","...","...","...","...","...","...","...","...","...","...","...","...","...","...","...","...","...","...","...","...","...","...",
+        "AM건강보험","AN요양보험","AO건강정산1","AP요양정산1","AQ건강정산2","AR요양정산2"];
+      sampleRow=["2025.05","","","","","","홍길동","900101-1234567","PA","EMP001",
+        "","","","","","","","","","","","","","","","","","","","","","","","","","","","",
+        100000,8500,0,0,0,0];
+      sheetName="건강보험 고지서";
+    }else if(type==="국민연금"){
+      headers=["A고지년월","...","C이름","D주민번호","E사업부","F사번",
+        "...","...","...","...","...","...","...","...","...","...","...","...",
+        "S국민연금"];
+      sampleRow=["2025.05","","홍길동","900101-1234567","PA","EMP001",
+        "","","","","","","","","","","","",95000];
+      sheetName="국민연금 고지서";
+    }else{
+      headers=["A고지년월","B사번","C이름","D주민번호","E국민연금(예수금)","F국민연금정산","G건강보험(예수금)","H건강정산","I요양보험(예수금)","J요양정산","K사업부"];
+      sampleRow=["2025.05","EMP001","홍길동","900101-1234567",95000,2000,100000,0,8500,0,"PA"];
+      sheetName="급여대장";
+    }
+    const ws=XLSX.utils.aoa_to_sheet([headers,sampleRow]);
+    const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,sheetName);
+    XLSX.writeFile(wb,sheetName+"_샘플양식.xlsx");
+  }
+
+  function downloadUploadedHealthGovExcel(){
+    const healthRows=rawPub.filter(r=>r.insType==="건강보험"||r.insType==="건강+연금"||(r.health>0||r.care>0||r.healthAdj>0||r.careAdj>0));
+    if(healthRows.length===0){alert("해당 월("+curYM+")에 업로드된 건강보험 고지서 데이터가 없습니다.");return;}
+    // Reconstruct with original column positions (sparse array, 44 cols: A=0..AR=43)
+    // A(0):고지년월, G(6):이름, H(7):주민번호, I(8):사업부, J(9):사번
+    // AM(38):건강, AN(39):요양, AO(40):건강정산(절반→AO), AQ(42):건강정산(나머지→AQ)
+    // AP(41):요양정산(절반→AP), AR(43):요양정산(나머지→AR)
+    const hdr=["A고지년월","","","","","","G이름","H주민번호","I사업부","J사번",
+      "","","","","","","","","","","","","","","","","","","","","","","","","","","","","",
+      "AM건강보험","AN요양보험","AO건강정산","AP요양정산","AQ건강정산2","AR요양정산2"];
+    const rows=[hdr];
+    healthRows.forEach(r=>{
+      const row=Array(44).fill("");
+      row[0]=r.yearMonth;row[6]=r.name;row[7]=r.rrn;row[8]=r.dept;row[9]=r.empId;
+      row[38]=r.health;row[39]=r.care;
+      // Split adj back: store full value in AO/AP, leave AQ/AR as 0
+      row[40]=r.healthAdj;row[41]=r.careAdj;row[42]=0;row[43]=0;
+      rows.push(row);
+    });
+    const ws=XLSX.utils.aoa_to_sheet(rows);
+    const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,"건강보험 고지서");
+    XLSX.writeFile(wb,"업로드원본_건강보험_고지서_"+curYM+".xlsx");
+  }
+
+  function downloadUploadedPensionGovExcel(){
+    const pensionRows=rawPub.filter(r=>r.insType==="국민연금"||r.insType==="건강+연금"||(r.pension>0));
+    if(pensionRows.length===0){alert("해당 월("+curYM+")에 업로드된 국민연금 고지서 데이터가 없습니다.");return;}
+    // A(0):고지년월, C(2):이름, D(3):주민번호, E(4):사업부, F(5):사번, S(18):국민연금
+    const hdr=["A고지년월","","C이름","D주민번호","E사업부","F사번",
+      "","","","","","","","","","","","","S국민연금"];
+    const rows=[hdr];
+    pensionRows.forEach(r=>{
+      const row=Array(19).fill("");
+      row[0]=r.yearMonth;row[2]=r.name;row[3]=r.rrn;row[4]=r.dept;row[5]=r.empId;
+      row[18]=r.pension;
+      rows.push(row);
+    });
+    const ws=XLSX.utils.aoa_to_sheet(rows);
+    const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,"국민연금 고지서");
+    XLSX.writeFile(wb,"업로드원본_국민연금_고지서_"+curYM+".xlsx");
+  }
+
+  function setReason(id,v){
+    setReasons(p=>({...p,[id]:v}));
+    // Auto-mark as checked when a reason is selected (not empty)
+    if(v)setChecked(p=>({...p,[id]:true}));
+  }
+  function setCustom(id,v){
+    setCustomReasons(p=>({...p,[id]:v}));
+    // Auto-mark done when custom text is entered
+    if(v.trim())setChecked(p=>({...p,[id]:true}));
+  }
+  function toggleCheck(id){setChecked(p=>({...p,[id]:!p[id]}))}
+
+  // Dept summary
+  const depts=useMemo(()=>["전체",...new Set(merged.map(r=>r.dept||"미분류"))]  ,[merged]);
+  const viewRows=useMemo(()=>deptView==="전체"?merged:merged.filter(r=>(r.dept||"미분류")===deptView),[merged,deptView]);
+  const deptSummary=useMemo(()=>{
+    const map={};
+    merged.forEach(r=>{
+      const d=r.dept||"미분류";
+      if(!map[d])map[d]={dept:d,pubH:0,pubC:0,pubHA:0,pubCA:0,pubP:0,payH:0,payC:0,payHA:0,payCA:0,payP:0};
+      map[d].pubH+=r.health;map[d].pubC+=r.care;map[d].pubHA+=r.healthAdj;map[d].pubCA+=r.careAdj;map[d].pubP+=r.pension;
+      if(r.pay){map[d].payH+=r.pay.health;map[d].payC+=r.pay.care;map[d].payHA+=r.pay.healthAdj;map[d].payCA+=r.pay.careAdj;map[d].payP+=r.pay.pension;}
+    });
+    return Object.values(map).sort((a,b)=>a.dept.localeCompare(b.dept,"ko"));
+  },[merged]);
+
+  const mismatchCount=merged.filter(r=>r.mismatch&&!checked[r.id]).length;
+  const doneCount=merged.filter(r=>checked[r.id]).length;
+
+  const TH=(bg)=>({background:bg||"var(--sky-d)",padding:"7px 8px",fontSize:9.5,fontWeight:700,color:"#fff",whiteSpace:"nowrap",textAlign:"center",borderRight:"1px solid rgba(255,255,255,.15)"});
+  const TD_DIFF=(v)=>{const n=Number(v||0);return <td style={{fontFamily:"'DM Mono',monospace",fontWeight:700,textAlign:"right",padding:"7px 8px",borderBottom:"1px solid #E8EEF5",color:n>0?"#DC2626":n<0?"#7C3AED":"#94A3B8",background:n!==0?"rgba(220,38,38,.04)":undefined,whiteSpace:"nowrap"}}>{n>0?"+":""}{fmtKRW(n)}</td>;};
+  const TD_AMT=(v,clr)=><td style={{fontFamily:"'DM Mono',monospace",fontSize:11,fontWeight:600,textAlign:"right",padding:"7px 8px",borderBottom:"1px solid #E8EEF5",color:clr||"var(--sky-d)",whiteSpace:"nowrap"}}>{fmtKRW(v)}</td>;
+
+  const hasHealth=merged.some(r=>r.insType==="건강보험"||r.health>0||r.care>0);
+  const hasPension=merged.some(r=>r.insType==="국민연금"||r.pension>0);
+
+  function downloadVerificationExcel(){
+    const dept=deptView==="전체"?"전체":deptView;
+    const rows=viewRows;
+    const hasH=rows.some(r=>r.insType==="건강보험"||r.health>0||r.care>0);
+    const hasP=rows.some(r=>r.insType==="국민연금"||r.pension>0);
+    const headers=["사업부","이름","주민번호(앞6자리)","고지년월"];
+    if(hasH)headers.push("공단_건강","공단_요양","공단_건강정산","공단_요양정산","급여_건강","급여_요양","급여_건강정산","급여_요양정산","차액_건강","차액_요양","차액_건강정산","차액_요양정산");
+    if(hasP)headers.push("공단_연금","급여_연금","차액_연금");
+    headers.push("사유","직접입력사유","검토상태");
+    const data=[headers];
+    rows.forEach(r=>{
+      const rrn6=String(r.rrn||"").replace(/-/g,"").slice(0,6)+"*******";
+      const row=[r.dept||"",r.name||"",rrn6,r.yearMonth||""];
+      if(hasH)row.push(r.health||0,r.care||0,r.healthAdj||0,r.careAdj||0,r.pay?r.pay.health:0,r.pay?r.pay.care:0,r.pay?r.pay.healthAdj:0,r.pay?r.pay.careAdj:0,r.diffHealth||0,r.diffCare||0,r.diffHealthAdj||0,r.diffCareAdj||0);
+      if(hasP)row.push(r.pension||0,r.pay?r.pay.pension:0,r.diffPension||0);
+      row.push(reasons[r.id]||"",customReasons[r.id]||"",checked[r.id]?"검토완료":r.autoOk?"자동완료":"검토대기");
+      data.push(row);
+    });
+    const ws=XLSX.utils.aoa_to_sheet(data);
+    const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,"상세비교");
+    const today=new Date();const ds=today.getFullYear()+String(today.getMonth()+1).padStart(2,"0")+String(today.getDate()).padStart(2,"0");
+    XLSX.writeFile(wb,"4대보험_검증_상세비교_"+dept+"_"+curYM+".xlsx");
+  }
+
+  return <div className="fadein">
+    {/* Month navigator */}
+    <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:14,background:"#fff",border:"1px solid var(--border2)",borderRadius:"var(--r)",padding:"12px 18px",boxShadow:"var(--sh)"}}>
+      <button className="btn btn-ghost btn-sm" onClick={()=>shiftMonth(-1)} style={{fontWeight:700}}>&#8249; 이전달</button>
+      <div style={{flex:1,textAlign:"center"}}>
+        <div style={{fontSize:16,fontWeight:800,color:"var(--sky-deep)",letterSpacing:".05em"}}>{curYM} 4대보험 검증</div>
+        <div style={{fontSize:10,color:"var(--t3)",marginTop:2}}>{hasData?"데이터 저장됨 — 새로고침 후에도 유지됩니다":"데이터 없음 — 파일을 업로드해주세요"}</div>
+      </div>
+      <button className="btn btn-ghost btn-sm" onClick={()=>shiftMonth(1)} style={{fontWeight:700}}>다음달 &#8250;</button>
+    </div>
+
+    {/* Google Drive 원본 파일 패널 */}
+    <div style={{marginBottom:10,display:"flex",alignItems:"center",gap:8}}>
+      <button className="btn btn-ghost btn-sm" style={{fontSize:10,gap:5,display:"inline-flex",alignItems:"center"}}
+        onClick={()=>{setShowDrivePanel(p=>!p);if(!showDrivePanel)driveFetchFileList(curYM).then(setDriveFiles);}}>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M3 15l4-8 5 6 3-4 6 6H3z" stroke="#16A34A" strokeWidth="1.6" strokeLinejoin="round"/><path d="M3 20h18" stroke="#16A34A" strokeWidth="1.4" strokeLinecap="round"/></svg>
+        {showDrivePanel?"드라이브 패널 닫기":"구글 드라이브 원본 파일 보기"}
+      </button>
+      {driveUploading&&<span style={{fontSize:10,color:"var(--sky-d)",fontWeight:600}}>드라이브 업로드 중...</span>}
+      {driveStatus==="done"&&!driveUploading&&<span style={{fontSize:10,color:"#16A34A",fontWeight:600}}>드라이브 업로드 완료</span>}
+      {driveStatus==="err"&&!driveUploading&&<span style={{fontSize:10,color:"#DC2626",fontWeight:600}}>드라이브 업로드 실패 (로컬 저장은 정상)</span>}
+    </div>
+    {showDrivePanel&&<div className="card" style={{marginBottom:14,borderTop:"3px solid #16A34A"}}>
+      <div className="card-hd">
+        <div className="card-title" style={{color:"#16A34A"}}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M3 15l4-8 5 6 3-4 6 6H3z" stroke="#16A34A" strokeWidth="1.6" strokeLinejoin="round"/></svg>
+          {"구글 드라이브 — "+curYM+" 원본 파일"}
+        </div>
+        <button className="btn btn-ghost btn-sm" style={{fontSize:10}}
+          onClick={()=>driveFetchFileList(curYM).then(setDriveFiles)}>새로고침</button>
+      </div>
+      <div className="card-body">
+        {driveFiles.length===0?
+          <div style={{textAlign:"center",padding:"16px 0",color:"var(--t3)",fontSize:12}}>
+            {GAS_DRIVE_URL==="여기에_GAS_배포_URL_입력"?"GAS URL을 설정하면 드라이브 파일 목록이 표시됩니다.":"이 달에 드라이브에 저장된 파일이 없습니다."}
+          </div>:
+          driveFiles.map(f=><div key={f.id} style={{display:"flex",alignItems:"center",gap:10,padding:"8px 0",borderBottom:"1px solid var(--border)"}}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="18" height="18" rx="2" fill="#34A853" opacity=".15"/><path d="M8 12h8M8 16h5" stroke="#34A853" strokeWidth="1.5" strokeLinecap="round"/><path d="M8 8h3" stroke="#34A853" strokeWidth="1.5" strokeLinecap="round"/></svg>
+            <div style={{flex:1,minWidth:0}}>
+              <div style={{fontSize:12,fontWeight:600,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{f.name}</div>
+              <div style={{fontSize:10,color:"var(--t3)"}}>{f.updatedAt+" · "+(f.size?Math.round(f.size/1024)+"KB":"")}</div>
+            </div>
+            <a href={f.downloadUrl} target="_blank" rel="noopener noreferrer"
+              style={{fontSize:10,padding:"4px 10px",borderRadius:7,border:"1px solid #34A85340",background:"#F0FDF4",color:"#16A34A",fontWeight:600,textDecoration:"none",whiteSpace:"nowrap"}}>
+              다운로드
+            </a>
+            <a href={f.url} target="_blank" rel="noopener noreferrer"
+              style={{fontSize:10,padding:"4px 10px",borderRadius:7,border:"1px solid var(--border2)",background:"var(--sky-l)",color:"var(--sky-d)",fontWeight:600,textDecoration:"none",whiteSpace:"nowrap"}}>
+              열기
+            </a>
+          </div>)
+        }
+      </div>
+    </div>}
+
+    {/* Upload + type selector */}
+    <div className="card" style={{marginBottom:14}}>
+      <div className="card-hd">
+        <div className="card-title">파일 업로드</div>
+        <div style={{display:"flex",alignItems:"center",gap:8}}>
+          <a href="https://cocen365-my.sharepoint.com/:f:/p/hypark/IgDdgqbkLES7R7q4dxCwF3enATgZU8WexodnumAzkvTQocY?e=qlnxXq" target="_blank" rel="noopener noreferrer"
+            style={{display:"inline-flex",alignItems:"center",gap:6,fontSize:11,padding:"5px 13px",borderRadius:8,border:"none",background:"#0078d4",color:"#fff",fontWeight:700,textDecoration:"none",whiteSpace:"nowrap",flexShrink:0}}>
+            4대보험 고지서 원드라이브 공유폴더
+          </a>
+          <span style={{fontSize:11,color:"var(--t2)",fontWeight:600}}>공단 고지서 종류:</span>
+          {INS_TYPES.map(v=><button key={v} onClick={()=>setPubTypeOverride(v)}
+            style={{padding:"4px 10px",borderRadius:7,fontSize:10,fontWeight:600,cursor:"pointer",fontFamily:"inherit",border:"1.5px solid "+(pubTypeOverride===v?"var(--sky-d)":"var(--border2)"),background:pubTypeOverride===v?"var(--sky-l)":"#fff",color:pubTypeOverride===v?"var(--sky-d)":"var(--t3)"}}>
+            {v}
+          </button>)}
+          <div style={{width:1,height:20,background:"var(--border2)",margin:"0 4px"}}/>
+          {hasData&&<>
+            <select value={deptDeleteSel} onChange={e=>setDeptDeleteSel(e.target.value)}
+              style={{fontSize:10,padding:"4px 8px",border:"1px solid var(--border2)",borderRadius:6,fontFamily:"inherit",background:"#fff",outline:"none",color:"var(--text)"}}>
+              <option value="">사업부 선택</option>
+              {[...new Set(rawPub.map(r=>r.dept||"미분류"))].sort().map(d=><option key={d} value={d}>{d}</option>)}
+            </select>
+            <button className="btn btn-ghost btn-sm" onClick={handleDeptDelete}
+              style={{fontSize:10,color:"#DC2626",borderColor:"#FECACA",background:"#FEF2F2"}}
+              disabled={!deptDeleteSel}>선택 사업부 삭제</button>
+            <button className="btn btn-danger btn-sm" onClick={handleDelete}>전체 삭제</button>
+          </>}
+        </div>
+      </div>
+      <div className="card-body">
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
+          {[["공단 고지서",handlePub,"#0EA5E9","#E0F2FE",rawPub.length],["회사 급여대장",handlePay,"#8B5CF6","#F5F3FF",rawPay.length]].map(([label,handler,clr,bg,cnt])=>
+            <label key={label} style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:8,padding:"20px",border:"2px dashed "+clr+"50",borderRadius:12,cursor:"pointer",background:cnt>0?clr+"08":bg,transition:"all .15s",position:"relative"}}>
+              {cnt>0&&<div style={{position:"absolute",top:8,right:10,fontSize:10,color:clr,fontWeight:700,background:clr+"15",padding:"2px 8px",borderRadius:10}}>{cnt}건 로드됨</div>}
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none"><path d="M12 16V4M12 4l-4 4M12 4l4 4" stroke={clr} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><path d="M4 20h16" stroke={clr} strokeWidth="2" strokeLinecap="round"/></svg>
+              <span style={{fontSize:12,fontWeight:700,color:clr}}>{label+" 업로드"}</span>
+              <span style={{fontSize:10,color:"var(--t3)"}}>{cnt>0?"재업로드 가능":"(.xlsx, .xls)"}</span>
+              <input type="file" accept=".xlsx,.xls" style={{display:"none"}} onChange={handler}/>
+            </label>
+          )}
+        </div>
+        {loading&&<div style={{textAlign:"center",padding:"10px",color:"var(--sky-d)",fontSize:12,fontWeight:600,marginTop:8}}>{loading}</div>}
+        {error&&<div style={{padding:"8px 12px",borderRadius:8,border:"1px solid #FECACA",background:"#FEF2F2",color:"#DC2626",fontSize:11,marginTop:8}}>{error}</div>}
+        <div style={{marginTop:12,paddingTop:12,borderTop:"1px solid var(--border)",display:"flex",alignItems:"center",gap:8,flexWrap:"wrap"}}>
+          <span style={{fontSize:11,fontWeight:600,color:"var(--t3)"}}>샘플 양식 다운로드:</span>
+          {[["건강보험","#0EA5E9"],["국민연금","#8B5CF6"],["급여대장","#059669"]].map(([type,clr])=>
+            <button key={type} onClick={()=>downloadSample(type)}
+              style={{display:"inline-flex",alignItems:"center",gap:5,fontSize:10,padding:"5px 12px",borderRadius:7,border:"1px solid "+clr+"40",background:clr+"0D",color:clr,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>
+              <svg width="12" height="12" viewBox="0 0 14 14" fill="none"><path d="M7 2v7M7 9l-3-3M7 9l3-3M2 12h10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              {type+" 양식"}
+            </button>
+          )}
+        </div>
+        {hasData&&rawPub.length>0&&<div style={{marginTop:6,paddingTop:10,borderTop:"1px solid var(--border)",display:"flex",alignItems:"center",gap:8,flexWrap:"wrap"}}>
+          <span style={{fontSize:11,fontWeight:600,color:"var(--sky-deep)"}}>업로드 원본 다운로드:</span>
+          <button onClick={downloadUploadedHealthGovExcel}
+            style={{display:"inline-flex",alignItems:"center",gap:5,fontSize:10,padding:"5px 12px",borderRadius:7,border:"1px solid #0EA5E940",background:"#E0F2FE",color:"#0369A1",fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>
+            <svg width="12" height="12" viewBox="0 0 14 14" fill="none"><path d="M7 2v7M7 9l-3-3M7 9l3-3M2 12h10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+            건강 고지서 다운로드
+          </button>
+          <button onClick={downloadUploadedPensionGovExcel}
+            style={{display:"inline-flex",alignItems:"center",gap:5,fontSize:10,padding:"5px 12px",borderRadius:7,border:"1px solid #8B5CF640",background:"#F5F3FF",color:"#6D28D9",fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>
+            <svg width="12" height="12" viewBox="0 0 14 14" fill="none"><path d="M7 2v7M7 9l-3-3M7 9l3-3M2 12h10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+            연금 고지서 다운로드
+          </button>
+        </div>}
+      </div>
+    </div>
+
+    {/* Status cards */}
+    {hasData&&<div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10,marginBottom:14}}>
+      {[["총 대상자",merged.length+"명","#0EA5E9"],["불일치",mismatchCount+"건","#DC2626"],["검토 완료",doneCount+"건","#16A34A"],["미완료",(mismatchCount)+"건","#D97706"]].map(([l,v,clr])=>
+        <div key={l} className="stat-card" style={{borderTopColor:clr}}>
+          <div className="stat-label" style={{color:clr}}>{l}</div>
+          <div className="stat-value" style={{color:clr,fontSize:22}}>{v}</div>
+        </div>
+      )}
+    </div>}
+
+    {/* Dept filter tabs */}
+    {deptSummary.length>0&&<div style={{display:"flex",gap:5,marginBottom:10,flexWrap:"wrap"}}>
+      {depts.map(d=><button key={d} className={"tab-btn"+(deptView===d?" active":"")} onClick={()=>setDeptView(d)}>{d}</button>)}
+    </div>}
+
+    {/* Dept summary table */}
+    {deptSummary.length>0&&<div className="card" style={{marginBottom:14}}>
+      <div className="card-hd"><div className="card-title">사업부별 요약</div></div>
+      <div style={{overflowX:"auto"}}>
+        <table className="xtbl" style={{minWidth:900}}>
+          <thead><tr>
+            <th style={TH()}>사업부</th>
+            <th style={TH()}>인원</th>
+            {hasHealth&&<><th style={TH("#4F46E5")}>공단 건강</th><th style={TH("#4F46E5")}>공단 요양</th><th style={TH("#059669")}>급여 건강</th><th style={TH("#059669")}>급여 요양</th><th style={TH("#DC2626")}>차 건강</th><th style={TH("#DC2626")}>차 요양</th></>}
+            {hasPension&&<><th style={TH("#4F46E5")}>공단 연금</th><th style={TH("#059669")}>급여 연금</th><th style={TH("#DC2626")}>차 연금</th></>}
+          </tr></thead>
+          <tbody>{deptSummary.map(d=>{
+            const dh=(d.pubH+d.pubHA)-(d.payH+d.payHA);
+            const dc=(d.pubC+d.pubCA)-(d.payC+d.payCA);
+            const dp=d.pubP-d.payP;
+            return <tr key={d.dept}>
+              <td style={{fontWeight:700}}>{d.dept}</td>
+              <td style={{textAlign:"center"}}>{merged.filter(r=>(r.dept||"미분류")===d.dept).length}</td>
+              {hasHealth&&<>
+                {TD_AMT(d.pubH+d.pubHA,"#4F46E5")}{TD_AMT(d.pubC+d.pubCA,"#4F46E5")}
+                {TD_AMT(d.payH+d.payHA,"#059669")}{TD_AMT(d.payC+d.payCA,"#059669")}
+                {TD_DIFF(dh)}{TD_DIFF(dc)}
+              </>}
+              {hasPension&&<>
+                {TD_AMT(d.pubP,"#4F46E5")}{TD_AMT(d.payP,"#059669")}{TD_DIFF(dp)}
+              </>}
+            </tr>;
+          })}</tbody>
+        </table>
+      </div>
+    </div>}
+
+    {/* Main table */}
+    {viewRows.length>0&&<div className="card">
+      <div className="card-hd">
+        <div className="card-title">상세 비교 — 주민번호 기준 매칭</div>
+        <div style={{display:"flex",alignItems:"center",gap:8}}>
+          <span style={{fontSize:11,color:"var(--t3)"}}>불일치 최상단 정렬 · {viewRows.length}건</span>
+          <button className="btn btn-secondary btn-sm" onClick={downloadVerificationExcel}
+            style={{fontSize:10,display:"inline-flex",alignItems:"center",gap:4}}>
+            <svg width="12" height="12" viewBox="0 0 14 14" fill="none"><path d="M7 2v7M7 9l-3-3M7 9l3-3M2 12h10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+            {(deptView==="전체"?"전체 사업부":"["+deptView+"]")+" 엑셀 다운로드"}
+          </button>
+        </div>
+      </div>
+      <div style={{overflowX:"auto"}}>
+        <table className="xtbl" style={{minWidth:hasHealth&&hasPension?1500:1100}}>
+          <thead><tr>
+            <th style={{...TH(),minWidth:28}}>✓</th>
+            <th style={{...TH(),minWidth:60,textAlign:"left"}}>사업부</th>
+            <th style={{...TH(),minWidth:60,textAlign:"left"}}>이름</th>
+            <th style={{...TH(),minWidth:110,fontFamily:"'DM Mono',monospace"}}>주민번호</th>
+            <th style={{...TH(),minWidth:70}}>고지년월</th>
+            {hasHealth&&<>
+              <th style={{...TH("#4F46E5"),minWidth:85}}>공단 건강</th>
+              <th style={{...TH("#4F46E5"),minWidth:85}}>공단 요양</th>
+              <th style={{...TH("#4F46E5"),minWidth:85}}>공단 건강정산</th>
+              <th style={{...TH("#4F46E5"),minWidth:85}}>공단 요양정산</th>
+              <th style={{...TH("#059669"),minWidth:85}}>급여 건강</th>
+              <th style={{...TH("#059669"),minWidth:85}}>급여 요양</th>
+              <th style={{...TH("#059669"),minWidth:85}}>급여 건강정산</th>
+              <th style={{...TH("#059669"),minWidth:85}}>급여 요양정산</th>
+              <th style={{...TH("#DC2626"),minWidth:75}}>차 건강</th>
+              <th style={{...TH("#DC2626"),minWidth:75}}>차 요양</th>
+              <th style={{...TH("#DC2626"),minWidth:75}}>차 건강정산</th>
+              <th style={{...TH("#DC2626"),minWidth:75}}>차 요양정산</th>
+            </>}
+            {hasPension&&<>
+              <th style={{...TH("#4F46E5"),minWidth:85}}>공단 연금</th>
+              <th style={{...TH("#059669"),minWidth:85}}>급여 연금</th>
+              <th style={{...TH("#DC2626"),minWidth:75}}>차 연금</th>
+            </>}
+            <th style={{...TH(),minWidth:160}}>사유</th>
+          </tr></thead>
+          <tbody>{viewRows.map(row=>{
+            const isDone=!!checked[row.id];
+            const rowBg=row.autoOk?"#F0FDF4":isDone?"#F0FDF4":row.mismatch?"rgba(254,226,226,.45)":"#fff";
+            const r=reasons[row.id]||"";
+            return <tr key={row.id} style={{background:rowBg}}>
+              <td style={{textAlign:"center",padding:"7px 6px",borderBottom:"1px solid #E8EEF5"}}>
+                <input type="checkbox" checked={isDone} onChange={()=>toggleCheck(row.id)} style={{width:14,height:14,cursor:"pointer",accentColor:"#16A34A"}}/>
+              </td>
+              <td style={{padding:"7px 8px",borderBottom:"1px solid #E8EEF5",fontSize:11}}>{row.dept||"—"}</td>
+              <td style={{padding:"7px 8px",borderBottom:"1px solid #E8EEF5",fontWeight:600,fontSize:12,color:isDone?"var(--t3)":"var(--text)"}}>{row.name}</td>
+              <td style={{padding:"7px 8px",borderBottom:"1px solid #E8EEF5",fontFamily:"'DM Mono',monospace",fontSize:10,textAlign:"center"}}>{maskRRN(row.rrn)}</td>
+              <td style={{padding:"7px 8px",borderBottom:"1px solid #E8EEF5",textAlign:"center",fontSize:11}}>{row.yearMonth||"—"}</td>
+              {hasHealth&&<>
+                {TD_AMT(row.health,"#4F46E5")}{TD_AMT(row.care,"#4F46E5")}
+                {TD_AMT(row.healthAdj,"#4F46E5")}{TD_AMT(row.careAdj,"#4F46E5")}
+                {TD_AMT(row.pay?row.pay.health:0,"#059669")}{TD_AMT(row.pay?row.pay.care:0,"#059669")}
+                {TD_AMT(row.pay?row.pay.healthAdj:0,"#059669")}{TD_AMT(row.pay?row.pay.careAdj:0,"#059669")}
+                {TD_DIFF(row.diffHealth)}{TD_DIFF(row.diffCare)}
+                {TD_DIFF(row.diffHealthAdj)}{TD_DIFF(row.diffCareAdj)}
+              </>}
+              {hasPension&&<>
+                {TD_AMT(row.pension,"#4F46E5")}
+                {TD_AMT(row.pay?row.pay.pension:0,"#059669")}
+                {TD_DIFF(row.diffPension)}
+              </>}
+              <td style={{padding:"7px 8px",borderBottom:"1px solid #E8EEF5"}}>
+                <div style={{display:"flex",gap:4,alignItems:"center",flexWrap:"wrap"}}>
+                  {row.mismatch&&<>
+                    <select value={r} onChange={e=>setReason(row.id,e.target.value)}
+                      style={{fontSize:10,border:"1px solid var(--border2)",borderRadius:6,padding:"3px 6px",background:isDone?"#F0FDF4":"#fff",fontFamily:"inherit",color:"var(--text)",minWidth:85,outline:"none"}}>
+                      <option value="">사유 선택</option>
+                      {INS_REASONS.map(rs=><option key={rs} value={rs}>{rs}</option>)}
+                    </select>
+                    {r==="직접입력"&&<input className="inp" style={{fontSize:10,padding:"3px 6px",width:90}} placeholder="직접입력" value={customReasons[row.id]||""} onChange={e=>setCustom(row.id,e.target.value)}/>}
+                    {isDone&&<span style={{fontSize:9,padding:"1px 6px",borderRadius:10,background:"#F0FDF4",color:"#16A34A",border:"1px solid #BBF7D0",fontWeight:700,flexShrink:0,whiteSpace:"nowrap"}}>검토완료</span>}
+                    {!isDone&&<span style={{fontSize:9,padding:"1px 6px",borderRadius:10,background:"#FFF7F7",color:"#DC2626",border:"1px solid #FECACA",fontWeight:700,flexShrink:0,whiteSpace:"nowrap"}}>검토대기</span>}
+                  </>}
+                  {!row.mismatch&&<span style={{fontSize:9,padding:"1px 6px",borderRadius:10,background:"#F0FDF4",color:"#16A34A",border:"1px solid #BBF7D0",fontWeight:700,whiteSpace:"nowrap"}}>{row.autoOk?"자동완료":"정상"}</span>}
+                </div>
+              </td>
+            </tr>;
+          })}</tbody>
+        </table>
+      </div>
+    </div>}
+
+    {!hasData&&<div style={{textAlign:"center",padding:"48px 0",color:"var(--t3)"}}>
+      <div style={{fontSize:40,marginBottom:12}}>📋</div>
+      <div style={{fontSize:14,fontWeight:700,marginBottom:6}}>4대보험 검증 — {curYM}</div>
+      <div style={{fontSize:12,lineHeight:1.7}}>공단 고지서와 회사 급여대장 파일을 업로드하면<br/>주민번호 기준으로 자동 매칭 후 차액을 계산합니다.<br/><span style={{color:"var(--sky-d)",fontWeight:600}}>데이터는 달별로 분리 저장되어 새로고침 후에도 유지됩니다.</span></div>
+    </div>}
+  </div>;
+}
+
+
+
+// ── Dashboard (메인 대시보드) ────────────────────────────────────────────────────
+function Dashboard(){
+  const saved=lsGet();
+  if(saved){delete saved.selectedDate;delete saved.calYear;delete saved.calMonth;}
+  const[page,setPage]=useState("home");
+  const[team,setTeam]=useState(()=>(saved&&saved.team)||DEF_TEAM);
+  const[employees,setEmployees]=useState(()=>(saved&&saved.employees)||[]);
+  const[tasks,setTasks]=useState(()=>(saved&&saved.tasks)||[]);
+  const[ts,setTs]=useState(()=>(saved&&saved.ts)||{});
+  const[routines,setRoutines]=useState(()=>loadRoutines()||[]);
+  const[calYear,setCalYear]=useState(()=>new Date().getFullYear());
+  const[calMonth,setCalMonth]=useState(()=>new Date().getMonth());
+  const[selectedDate,setSelectedDate]=useState(()=>todayStr);
+  const[modal,setModal]=useState(null);
+  const[adminName,setAdminName]=useState(()=>(saved&&saved.adminName)||"박혜연");
+  const[toast,setToast]=useState(null);
+  const[empForm,setEmpForm]=useState({name:"",empId:"",dept:"HQ",type:"입사",date:todayStr,note:""});
+  const[apiRows,setApiRows]=useState([]);
+  const[apiStatus,setApiStatus]=useState("idle");
+  const[apiUrl,setApiUrl]=useState(API_URL);
+  const[gTmpl,setGTmpl]=useState(()=>loadGTmpl());
+  const[showGuide,setShowGuide]=useState(false);
+  const[cloudRev,setCloudRev]=useState(0); // 다른 사용자 변경분을 당겨올 때 하위 페이지 강제 새로고침용
+
+  // ── 컬렉션별 클라우드 저장 (변경 시 → 구글 시트로 push, optimistic) ──
+  useSkipFirstEffect(()=>{SheetDB.setCollection("team",team)},[team]);
+  useSkipFirstEffect(()=>{SheetDB.setCollection("employees",employees)},[employees]);
+  useSkipFirstEffect(()=>{SheetDB.setCollection("tasks",tasks)},[tasks]);
+  useSkipFirstEffect(()=>{SheetDB.setCollection("ts",ts)},[ts]);
+  useSkipFirstEffect(()=>{SheetDB.setCollection("adminName",adminName)},[adminName]);
+  useSkipFirstEffect(()=>{saveRoutines(routines)},[routines]);
+
+  // ── 다른 사용자의 변경분 동기화: 창 포커스 / 30초 주기 / 수동 버튼 ──
+  const reconcile=useCallback((data,remount)=>{
+    if(!data)return;
+    const setIfDiff=(cur,next,setter)=>{ if(next!==undefined&&JSON.stringify(cur)!==JSON.stringify(next))setter(next); };
+    setIfDiff(team,data.team,setTeam);
+    setIfDiff(employees,data.employees,setEmployees);
+    setIfDiff(tasks,data.tasks,setTasks);
+    setIfDiff(ts,data.ts,setTs);
+    setIfDiff(routines,data.routines,setRoutines);
+    if(data.gTmpl&&typeof data.gTmpl==="object")setIfDiff(gTmpl,data.gTmpl,setGTmpl);
+    if(typeof data.adminName==="string"&&data.adminName)setIfDiff(adminName,data.adminName,setAdminName);
+    if(remount)setCloudRev(v=>v+1); // 메모/4대보험/체크리스트는 캐시 갱신 후 리마운트로 반영
+  },[team,employees,tasks,ts,routines,gTmpl,adminName]);
+  const syncFromCloud=useCallback(async(remount)=>{
+    if(SheetDB.pending()>0)return; // 내 저장이 진행 중이면 건너뜀(덮어쓰기 방지)
+    const data=await SheetDB.refresh();
+    reconcile(data,remount);
+  },[reconcile]);
+  useEffect(()=>{
+    const onFocus=()=>syncFromCloud(true);
+    window.addEventListener("focus",onFocus);
+    const iv=setInterval(()=>syncFromCloud(false),30000);
+    return()=>{window.removeEventListener("focus",onFocus);clearInterval(iv)};
+  },[syncFromCloud]);
+
+  useEffect(()=>{
+    if(!routines||routines.length===0)return;
+    setTasks(prev=>{
+      let next=[...prev];let changed=false;
+      (routines||[]).forEach(r=>{const ne=expandRoutine(r,next,team);if(ne.length>0){next=[...next,...ne];changed=true;}});
+      return changed?next:prev;
+    });
+  },[routines,team]);
+
+  useEffect(()=>{
+    setTs(prev=>{let ch=false;const n={...prev};(tasks||[]).forEach(t=>{if(n[t.id]===undefined){n[t.id]="pending";ch=true;}});return ch?n:prev});
+  },[tasks]);
+
+  const onToggle=useCallback(id=>setTs(p=>({...p,[id]:p[id]==="completed"?"pending":"completed"})),[]);
+  // Expose addTask globally so QuickAddModal can call it without prop-drilling
+  useEffect(()=>{
+    window.__addTask=(newTask)=>{
+      setTasks(p=>[...p,newTask]);
+      setTs(p=>({...p,[newTask.id]:"pending"}));
+    };
+    return()=>{delete window.__addTask};
+  },[]);
+  const onDelete=useCallback(id=>{setTasks(p=>p.filter(t=>t.id!==id));setTs(p=>{const s={...p};delete s[id];return s})},[]);
+  const onCalNav=dir=>setCalMonth(m=>{let nm=m+dir;if(nm>11){setCalYear(y=>y+1);return 0}if(nm<0){setCalYear(y=>y-1);return 11}return nm});
+  const onAddCal=date=>{setSelectedDate(date);setModal("schedule")};
+
+  function handleAddSchedules(payload){
+    if(!payload)return;
+    if(payload.kind==="tasks"){
+      const tks=payload.tasks||[];setTasks(p=>[...p,...tks]);setTs(p=>{const s={...p};tks.forEach(t=>s[t.id]="pending");return s});setToast("일정 "+tks.length+"개 추가 완료");
+    }else if(payload.kind==="routine"){
+      const nr={id:uid(),task:payload.task,cycle:payload.cycle,startDate:payload.startDate,day:payload.day,legal:payload.legal,assignees:payload.assignees};
+      const newRts=[...(routines||[]),nr];setRoutines(newRts);
+      const ne=expandRoutine(nr,[...(tasks||[])],team||[]);
+      setTasks(p=>[...p,...ne]);setTs(p=>{const s={...p};ne.forEach(t=>s[t.id]="pending");return s});
+      setToast("정기 일정 생성 완료 ("+ne.length+"개 일정 생성)");
+    }
+  }
+  function handleDeleteRoutine(rid){
+    setRoutines(p=>(p||[]).filter(r=>r.id!==rid));
+    setTasks(p=>(p||[]).filter(t=>t.routineId!==rid));
+    setTs(p=>{const s={...p};(tasks||[]).forEach(t=>{if(t.routineId===rid)delete s[t.id]});return s});
+    setToast("정기 일정 삭제 완료");
+  }
+  function handleEditRoutine(rid,payload){
+    const updated={id:rid,...payload};
+    setRoutines(p=>(p||[]).map(r=>r.id===rid?updated:r));
+    setTasks(prev=>{
+      const without=(prev||[]).filter(t=>t.routineId!==rid);
+      const ne=expandRoutine(updated,without,team||[]);
+      return [...without,...ne];
+    });
+    setToast("정기 일정 수정 완료");
+  }
+  function handleRefresh(){setApiStatus("loading");fetch(apiUrl).then(r=>r.json()).then(data=>{const rows=Array.isArray(data)?data:(data.data||[]);setApiRows(rows.map((r,i)=>({rowIndex:r.rowIndex||(i+2),...r})));setApiStatus("ok")}).catch(()=>setApiStatus("err"))}
+  function submitEmp(){
+    if(!empForm.name||!empForm.date)return alert("이름과 날짜를 입력해주세요.");
+    const emp={id:uid(),...empForm,empId:empForm.empId||"N/A"};
+    setEmployees(p=>[...(p||[]),emp]);const nt=genEmpTasks(emp);
+    setTasks(p=>[...(p||[]),...nt]);setTs(p=>{const s={...p};nt.forEach(t=>s[t.id]="pending");return s});
+    setModal(null);setEmpForm({name:"",empId:"",dept:"HQ",type:"입사",date:todayStr,note:""});setToast(empForm.name+" 추가 완료");
+  }
+
+  const urgentCount=(tasks||[]).filter(t=>t.urgent&&ts[t.id]!=="completed").length;
+  const moveCount=(apiRows||[]).filter(r=>MOVE_TYPES.includes(String(r.isReflected||"").trim())).length;
+  const histPend=(apiRows||[]).filter(r=>r.verify1Done&&!r.verify2Done).length;
+  const NAV=[{key:"home",label:"전체 워크플로우",icon:"⊞"},{key:"ob",label:"인사이동 관리",icon:"↔",badge:moveCount,bCls:"sky"},{key:"team",label:"팀원별 진척도",icon:"◈"},{key:"history",label:"업무 이력",icon:"≡",badge:histPend},{key:"memo",label:"특이사항 관리",icon:"✎"},{key:"insurance",label:"4대보험 검증",icon:"◉"}];
+  const PMETA={home:{title:"HRM 업무 관리 대시보드",sub:KOR_M[calMonth]+" "+calYear+" · 일정 관리"},ob:{title:"인사이동 관리",sub:"D열 자동 필터링 · 공통 루틴 체크리스트"},team:{title:"팀원별 진척도",sub:"당일 진행률 · "+selectedDate+" 기준"},history:{title:"업무 이력",sub:"Google Sheets 연동 · 1차/2차 검증"},memo:{title:"특이사항 관리",sub:"HR 메모 · 이슈 · 요청사항 기록 및 관리"},insurance:{title:"4대보험 검증",sub:"공단 고지서 vs 급여대장 주민번호 기준 자동 매칭 · 차액 계산"}};
+
+  return <div className="bw">
+    <div className="bchrome">
+      <div className="btb">
+        <div className="bdots"><div className="bd r"/><div className="bd y"/><div className="bd g"/></div>
+        <div className="baddr" style={{flex:1}}><span>{"hr-shine-desk.app / "+page}</span><div style={{flex:1}}/><span style={{fontSize:10,color:"#94A3B8"}}>HR SHINE DESK v15</span></div>
+        <div style={{display:"flex",gap:10,alignItems:"center",fontSize:10,color:"#64748B"}}><SyncBadge/></div>
+      </div>
+      <div className="btabs"><div className="btab active">HR SHINE DESK — {(PMETA[page]||{}).title}</div></div>
+    </div>
+    <div className="bcontent">
+      <div className="shell">
+        <aside className="sidebar">
+          <div className="sb-logo">
+            <div className="sb-logo-icon"><svg width="18" height="18" viewBox="0 0 16 16" fill="none"><rect x="1" y="1" width="6" height="6" rx="1.5" fill="white"/><rect x="9" y="1" width="6" height="6" rx="1.5" fill="white" opacity=".7"/><rect x="1" y="9" width="6" height="6" rx="1.5" fill="white" opacity=".7"/><rect x="9" y="9" width="6" height="6" rx="1.5" fill="white" opacity=".4"/></svg></div>
+            <div className="sb-logo-t">HR SHINE DESK</div>
+            <div className="sb-logo-s">HRM Operations v15</div>
+          </div>
+          <div className="sb-sec">워크스페이스</div>
+          <nav className="sb-nav">
+            {NAV.map(({key,label,icon,badge,bCls})=><button key={key} className={"nav-item"+(page===key?" active":"")} onClick={()=>setPage(key)}>
+              <span style={{opacity:.8}}>{icon}</span><span style={{flex:1}}>{label}</span>
+              {badge>0&&<span className={"nav-badge"+(bCls?" "+bCls:"")}>{badge}</span>}
+            </button>)}
+          </nav>
+          <div className="sb-footer">
+            <div style={{fontSize:10,color:"rgba(255,255,255,.35)",display:"flex",alignItems:"center",gap:5,marginBottom:5}}><div className="ldot"/>구글 시트 실시간 공유 저장</div>
+            <div style={{fontSize:9,color:"rgba(255,255,255,.2)",fontFamily:"'DM Mono',monospace"}}>{"정기 일정: "+(routines||[]).length+"개 활성"}</div>
+          </div>
+        </aside>
+        <div className="main">
+          <header className="topbar">
+            <div>
+              <div style={{fontSize:14,fontWeight:800,color:"var(--sky-deep)"}}>{(PMETA[page]||{}).title}</div>
+              <div style={{fontSize:10,color:"var(--t3)",marginTop:1}}>{(PMETA[page]||{}).sub}</div>
+            </div>
+            <div style={{display:"flex",alignItems:"center",gap:8}}>
+              <a href="https://docs.google.com/spreadsheets/d/1-gpzWbXGwPIOz6FIJwLGeAmcOVLK_JWtLeFLZ-DW8D4/edit?gid=0#gid=0" target="_blank" rel="noopener noreferrer" style={{display:"inline-flex",alignItems:"center",gap:5,fontSize:11,padding:"5px 12px",borderRadius:"var(--rs)",border:"1px solid #BBF7D0",background:"#F0FDF4",color:"#16A34A",fontWeight:600,textDecoration:"none",cursor:"pointer"}}>
+                <span style={{width:8,height:8,borderRadius:"50%",background:"#16A34A",display:"inline-block",flexShrink:0}}/>
+                구글 시트 바로가기
+              </a>
+              <button className="btn btn-ghost" style={{fontSize:11,padding:"5px 12px"}} onClick={()=>{syncFromCloud(true);handleRefresh();setToast("최신 데이터 동기화 중...")}}>↻ 동기화</button>
+              <button className="btn btn-ghost" style={{fontSize:11,padding:"5px 12px"}} onClick={()=>setModal("routine")}>정기 일정 관리</button>
+              <button className="btn btn-ghost" style={{fontSize:11,padding:"5px 12px"}} onClick={()=>setModal("schedule")}>+ 일정 추가</button>
+              <button className="btn btn-primary" style={{fontSize:11,padding:"5px 14px"}} onClick={()=>setModal("employee")}>+ 직원 추가</button>
+              <button className="btn btn-ghost" style={{fontSize:11,padding:"5px 12px"}} onClick={()=>setShowGuide(true)}>도움말</button>
+              <div style={{width:30,height:30,borderRadius:"50%",background:"var(--sky-l)",border:"1.5px solid var(--sky-m)",color:"var(--sky-d)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:10,fontWeight:800}}>HR</div>
+            </div>
+          </header>
+          <main className="pgcont">
+            {page==="home"&&<PageHome employees={employees||[]} tasks={tasks||[]} ts={ts||{}} apiRows={apiRows||[]} team={team||[]} calYear={calYear} calMonth={calMonth} onCalNav={onCalNav} onToggle={onToggle} onDelete={onDelete} onAddCal={onAddCal} selectedDate={selectedDate} onSelectDate={setSelectedDate}/>}
+            {page==="ob"&&<PageOB apiRows={apiRows||[]} apiStatus={apiStatus} team={team||[]} onRefresh={handleRefresh} gTmpl={gTmpl} setGTmpl={setGTmpl}/>}
+            {page==="team"&&<PageTeam tasks={tasks||[]} ts={ts||{}} team={team||[]} onToggle={onToggle} onDelete={onDelete} onUpdateTeam={setTeam} selectedDate={selectedDate} onSelectDate={setSelectedDate}/>}
+            {page==="history"&&<PageHistory adminName={adminName} setAdminName={setAdminName} apiRows={apiRows||[]} setApiRows={setApiRows} apiStatus={apiStatus} setApiStatus={setApiStatus} apiUrl={apiUrl} setApiUrl={setApiUrl}/>}
+            {page==="memo"&&<PageMemo key={"memo_"+cloudRev} selectedDate={selectedDate}/>}
+            {page==="insurance"&&<Page4Insurance key={"ins_"+cloudRev}/>}
+          </main>
+        </div>
+      </div>
+    </div>
+    {modal==="employee"&&<Modal title="직원 추가" sub="추가 즉시 일정이 자동 생성됩니다." onClose={()=>setModal(null)}>
+      <FR label="이름"><input className="inp" placeholder="홍길동" value={empForm.name} onChange={e=>setEmpForm(f=>({...f,name:e.target.value}))}/></FR>
+      <FR label="사번"><input className="inp" placeholder="EMP-001" value={empForm.empId} onChange={e=>setEmpForm(f=>({...f,empId:e.target.value}))}/></FR>
+      <FR label="사업부"><select className="inp" value={empForm.dept} onChange={e=>setEmpForm(f=>({...f,dept:e.target.value}))}>{DEPTS.map(d=><option key={d}>{d}</option>)}</select></FR>
+      <FR label="구분"><select className="inp" value={empForm.type} onChange={e=>setEmpForm(f=>({...f,type:e.target.value}))}>{ALL_STATUSES.map(s=><option key={s} value={s}>{s}</option>)}</select></FR>
+      <FR label="날짜"><input type="date" className="inp" value={empForm.date} onChange={e=>setEmpForm(f=>({...f,date:e.target.value}))}/></FR>
+      <FR label="특이사항"><input className="inp" placeholder="권고사직, 계약만료 등" value={empForm.note} onChange={e=>setEmpForm(f=>({...f,note:e.target.value}))}/></FR>
+      <div style={{display:"flex",gap:8,justifyContent:"flex-end",marginTop:14}}>
+        <button className="btn btn-ghost" onClick={()=>setModal(null)}>취소</button>
+        <button className="btn btn-primary" onClick={submitEmp}>추가 + 자동 생성</button>
+      </div>
+    </Modal>}
+    {modal==="schedule"&&<ScheduleModal team={team||[]} onClose={()=>setModal(null)} onAddSchedules={handleAddSchedules}/>}
+    {modal==="routine"&&<RoutineManagerModal routines={routines||[]} team={team||[]} onClose={()=>setModal(null)} onDelete={handleDeleteRoutine} onEdit={handleEditRoutine} onAdd={handleAddSchedules} onReset={()=>{setRoutines([]);setTasks(p=>(p||[]).filter(t=>!t.routineId));setToast("정기 일정 초기화 완료");setModal(null)}}/>}
+    {toast&&<Toast msg={toast} onDone={()=>setToast(null)}/>}
+    {showGuide&&<GuideModal onClose={()=>setShowGuide(false)}/>}
+  </div>;
+}
+
+// ── 상단 동기화 상태 배지 ─────────────────────────────────────────────────────
+function SyncBadge(){
+  const[st,setSt]=useState(SheetDB.status());
+  useEffect(()=>SheetDB.onStatus(setSt),[]);
+  const MAP={
+    idle:{dot:"#94A3B8",t:"대기"},
+    loading:{dot:"#0EA5E9",t:"불러오는 중…"},
+    saving:{dot:"#0EA5E9",t:"저장 중…"},
+    saved:{dot:"#16A34A",t:"동기화됨"},
+    offline:{dot:"#D97706",t:"오프라인(로컬 저장)"},
+    error:{dot:"#DC2626",t:"연결 오류"},
+  };
+  const m=MAP[st]||MAP.idle;
+  const spin=(st==="saving"||st==="loading");
+  return <span style={{display:"inline-flex",alignItems:"center",gap:6,fontSize:10,color:"#475569",fontWeight:600}}>
+    <span style={{width:8,height:8,borderRadius:"50%",background:m.dot,display:"inline-block",
+      boxShadow:spin?"0 0 0 3px "+m.dot+"22":"none",transition:"all .2s"}}/>
+    {m.t}
+  </span>;
+}
+
+// ── App — 부트 로더: 시트에서 전체 데이터 로드 후 대시보드 진입 ─────────────────
+function App(){
+  const[booted,setBooted]=useState(false);
+  useEffect(()=>{SheetDB.boot().then(()=>setBooted(true)).catch(()=>setBooted(true))},[]);
+  if(!booted){
+    return <div style={{height:"100vh",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",
+        background:"var(--bg)",fontFamily:"'Noto Sans KR',sans-serif"}}>
+      <div style={{width:56,height:56,borderRadius:16,background:"linear-gradient(135deg,#0EA5E9,#38BDF8)",
+        display:"flex",alignItems:"center",justifyContent:"center",marginBottom:18,
+        boxShadow:"0 8px 28px rgba(14,165,233,.35)"}}>
+        <svg width="28" height="28" viewBox="0 0 16 16" fill="none"><rect x="1" y="1" width="6" height="6" rx="1.5" fill="white"/><rect x="9" y="1" width="6" height="6" rx="1.5" fill="white" opacity=".7"/><rect x="1" y="9" width="6" height="6" rx="1.5" fill="white" opacity=".7"/><rect x="9" y="9" width="6" height="6" rx="1.5" fill="white" opacity=".4"/></svg>
+      </div>
+      <div style={{fontSize:16,fontWeight:800,color:"var(--sky-deep)",letterSpacing:"-.02em"}}>HR SHINE DESK</div>
+      <div style={{fontSize:12,color:"var(--t2)",marginTop:8,display:"flex",alignItems:"center",gap:8}}>
+        <span className="boot-spin" style={{width:14,height:14,border:"2px solid var(--sky-m)",borderTopColor:"var(--sky)",borderRadius:"50%",display:"inline-block"}}/>
+        구글 시트에서 공유 데이터를 불러오는 중…
+      </div>
+      <style>{"@keyframes bootspin{to{transform:rotate(360deg)}}.boot-spin{animation:bootspin .7s linear infinite}"}</style>
+    </div>;
+  }
+  return <Dashboard/>;
+}
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+
+</script>
+</body>
+</html>
