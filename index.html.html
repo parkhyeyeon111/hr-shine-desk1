@@ -148,7 +148,10 @@ select.inp option{background:white;color:var(--text)}
 <div id="root"></div>
 <script type="text/babel">
 const {useState,useEffect,useMemo,useCallback,useRef}=React;
-const API_URL="https://script.google.com/macros/s/AKfycbyOkYczSkdQffjXoBRKOYkkTLUB_3xoDTU3JxOB_RHf1BiTAmKX28_LNUykOqum1MyR/exec";
+// [업무이력] 기존 업무이력(verify1/verify2/append/history) 연동용 — 기존 배포 그대로 유지
+const API_URL="https://script.google.com/macros/s/AKfycbzd8dkOgHBHcsauhB4H2ASU_mdJ9aSAS0IZi66kmwHaXy1QJq3sftoRyPjjxaqZamGjLw/exec";
+// [공유 저장] 팀/직원/일정/메모/4대보험/드라이브 등 실시간 공유 저장용 — 새로 배포한 Web App URL
+const SHARED_API_URL="https://script.google.com/macros/s/AKfycbyxAxMHGDaEvvPacdsPdHPHMRgYOv7sXdJde0A9eQ3PuNq37t4q6hXRYFPBfM9nIpHv/exec";
 const LS_KEY="hr_v15";
 const GTMPL_KEY="hr_v15_gtmpl";
 const ROUTINE_KEY="hr_v15_routines";
@@ -198,7 +201,7 @@ const SheetDB=(function(){
     emit("loading");
     const mir=readMirror(); if(mir)applyState(mir); // 즉시 오프라인 캐시로 시작
     try{
-      const res=await fetch(API_URL+"?action=getState&t="+Date.now());
+      const res=await fetch(SHARED_API_URL+"?action=getState&t="+Date.now());
       if(!res.ok)throw new Error("HTTP "+res.status);
       const data=await res.json();
       applyState(data); writeMirror();
@@ -213,7 +216,7 @@ const SheetDB=(function(){
     if(timers[key])clearTimeout(timers[key]);
     timers[key]=setTimeout(async()=>{
       try{
-        await fetch(API_URL,{method:"POST",mode:"no-cors",
+        await fetch(SHARED_API_URL,{method:"POST",mode:"no-cors",
           headers:{"Content-Type":"text/plain;charset=utf-8"},
           body:JSON.stringify(payload)});
         pending=Math.max(0,pending-1);
@@ -231,7 +234,7 @@ const SheetDB=(function(){
   }
   async function refresh(){
     try{
-      const res=await fetch(API_URL+"?action=getState&t="+Date.now());
+      const res=await fetch(SHARED_API_URL+"?action=getState&t="+Date.now());
       if(!res.ok)throw new Error();
       const data=await res.json(); applyState(data); writeMirror();
       if(status!=="saving"&&pending===0)emit("saved");
@@ -378,6 +381,43 @@ function DelBtn({onClick}){
     <svg width="10" height="10" viewBox="0 0 14 14" fill="none"><path d="M2 4h10M5 4V2.5a.5.5 0 01.5-.5h3a.5.5 0 01.5.5V4M5.5 6.5v4M8.5 6.5v4M3 4l.8 7.2a1 1 0 001 .8h4.4a1 1 0 001-.8L11 4" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/></svg>
   </button>;
 }
+function EditBtn({onClick}){
+  const[h,setH]=useState(false);
+  return <button onClick={onClick} onMouseEnter={()=>setH(true)} onMouseLeave={()=>setH(false)} title="수정" style={{width:20,height:20,borderRadius:5,display:"flex",alignItems:"center",justifyContent:"center",border:"none",background:h?"#EFF6FF":"transparent",color:h?"#2563EB":"#CBD5E1",cursor:"pointer",flexShrink:0}}>
+    <svg width="10" height="10" viewBox="0 0 14 14" fill="none"><path d="M9.4 2.3l2.3 2.3L5 11.3l-2.6.6.6-2.6 6.4-7z" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/></svg>
+  </button>;
+}
+// 업무 수정 모달 (달력/팀원 진척도 공용) — 저장 시 patch 를 콜백으로 전달, tasks 변경이 클라우드로 자동 동기화됨
+function TaskEditModal({task,team,onSave,onClose}){
+  const[t,setT]=useState(task.task||"");
+  const[due,setDue]=useState(task.due||todayStr);
+  const[asgn,setAsgn]=useState(task.asgn||"미지정");
+  const[urgent,setUrgent]=useState(!!task.urgent);
+  const[legal,setLegal]=useState(!!task.legal);
+  const[note,setNote]=useState(task.note||"");
+  const inpRef=useRef(null);
+  useEffect(()=>{if(inpRef.current)inpRef.current.focus()},[]);
+  function save(){if(!t.trim())return;onSave({task:t.trim(),due,asgn,urgent,legal,note});}
+  return <Modal title="업무 수정" sub={due+" 기준"} onClose={onClose}>
+    <FR label="업무 내용"><input ref={inpRef} className="inp" value={t} onChange={e=>setT(e.target.value)} onKeyDown={e=>e.key==="Enter"&&save()}/></FR>
+    <FR label="마감일"><input type="date" className="inp" value={due} onChange={e=>setDue(e.target.value)}/></FR>
+    <FR label="담당자">
+      <select className="inp" value={asgn} onChange={e=>setAsgn(e.target.value)}>
+        <option value="미지정">미지정</option>
+        {(team||[]).map(m=><option key={m.id} value={m.id}>{m.name}</option>)}
+      </select>
+    </FR>
+    <div style={{display:"flex",gap:18,marginBottom:12}}>
+      <label style={{display:"flex",alignItems:"center",gap:6,fontSize:11,fontWeight:600,color:"var(--t2)",cursor:"pointer"}}><input type="checkbox" checked={urgent} onChange={e=>setUrgent(e.target.checked)} style={{width:14,height:14,accentColor:"#DC2626",cursor:"pointer"}}/>긴급 업무</label>
+      <label style={{display:"flex",alignItems:"center",gap:6,fontSize:11,fontWeight:600,color:"var(--t2)",cursor:"pointer"}}><input type="checkbox" checked={legal} onChange={e=>setLegal(e.target.checked)} style={{width:14,height:14,accentColor:"var(--sky-deep)",cursor:"pointer"}}/>법정 업무</label>
+    </div>
+    <FR label="메모"><input className="inp" value={note} onChange={e=>setNote(e.target.value)} placeholder="(선택)"/></FR>
+    <div style={{display:"flex",gap:8,justifyContent:"flex-end",marginTop:4}}>
+      <button className="btn btn-ghost" onClick={onClose}>취소</button>
+      <button className="btn btn-primary" onClick={save}>저장</button>
+    </div>
+  </Modal>;
+}
 function Toast({msg,onDone}){
   useEffect(()=>{const t=setTimeout(onDone,2800);return()=>clearTimeout(t)},[]);
   return <div className="toast">{msg}</div>;
@@ -473,7 +513,8 @@ function ChecklistPanel({row,managerName,onClose,gTmpl,setGTmpl}){
 }
 
 // ── BigCal ─────────────────────────────────────────────────────────────────────
-function BigCal({tasks,ts,team,calYear,calMonth,onNav,onAddCal,onToggle,selectedDate,onSelectDate}){
+function BigCal({tasks,ts,team,calYear,calMonth,onNav,onAddCal,onToggle,onDelete,onEditTask,selectedDate,onSelectDate}){
+  const[editTask,setEditTask]=useState(null);
   const[selDay,setSelDay]=useState(()=>{
     if(selectedDate){const d=new Date(selectedDate);if(d.getFullYear()===calYear&&d.getMonth()===calMonth)return d.getDate();}
     return TODAY.getDate();
@@ -554,6 +595,10 @@ function BigCal({tasks,ts,team,calYear,calMonth,onNav,onAddCal,onToggle,selected
                     <div style={{fontSize:11,fontWeight:600,color:isDone?"var(--t3)":"var(--text)",textDecoration:isDone?"line-through":"none"}}>{t.task}</div>
                     <div style={{fontSize:9.5,color:"var(--t3)",marginTop:2}}>{(t.legal?"법정":"일반")+(t.note?" · "+t.note:"")}</div>
                   </div>
+                  <div style={{display:"flex",alignItems:"center",gap:2,flexShrink:0}}>
+                    {onEditTask&&<EditBtn onClick={()=>setEditTask(t)}/>}
+                    {onDelete&&<DelBtn onClick={()=>{if(confirm("이 업무를 삭제할까요?"))onDelete(t.id)}}/>}
+                  </div>
                 </div>
               </div>;
             })}
@@ -561,6 +606,7 @@ function BigCal({tasks,ts,team,calYear,calMonth,onNav,onAddCal,onToggle,selected
         </div>
       </div>
     </div>
+    {editTask&&<TaskEditModal task={editTask} team={team} onSave={patch=>{onEditTask(editTask.id,patch);setEditTask(null)}} onClose={()=>setEditTask(null)}/>}
   </div>;
 }
 
@@ -657,10 +703,10 @@ function SummaryBar({employees,tasks,ts,apiRows,selectedDate,calYear,calMonth}){
   </div>;
 }
 
-function PageHome({employees,tasks,ts,apiRows,team,calYear,calMonth,onCalNav,onToggle,onDelete,onAddCal,selectedDate,onSelectDate}){
+function PageHome({employees,tasks,ts,apiRows,team,calYear,calMonth,onCalNav,onToggle,onDelete,onEditTask,onAddCal,selectedDate,onSelectDate}){
   return <div className="fadein">
     <SummaryBar employees={employees||[]} tasks={tasks||[]} ts={ts||{}} apiRows={apiRows||[]} selectedDate={selectedDate} calYear={calYear} calMonth={calMonth}/>
-    <BigCal tasks={tasks||[]} ts={ts||{}} team={team||[]} calYear={calYear} calMonth={calMonth} onNav={onCalNav} onAddCal={onAddCal} onToggle={onToggle} selectedDate={selectedDate} onSelectDate={onSelectDate}/>
+    <BigCal tasks={tasks||[]} ts={ts||{}} team={team||[]} calYear={calYear} calMonth={calMonth} onNav={onCalNav} onAddCal={onAddCal} onToggle={onToggle} onDelete={onDelete} onEditTask={onEditTask} selectedDate={selectedDate} onSelectDate={onSelectDate}/>
   </div>;
 }
 
@@ -1049,11 +1095,12 @@ function QuickAddModal({member,defaultDate,onSave,onClose}){
   </div>;
 }
 
-function PageTeam({tasks,ts,team,onToggle,onDelete,onUpdateTeam,selectedDate,onSelectDate}){
+function PageTeam({tasks,ts,team,onToggle,onDelete,onEditTask,onUpdateTeam,selectedDate,onSelectDate}){
   const[modal,setModal]=useState(null);
   const[form,setForm]=useState({name:"",role:"",color:"#0EA5E9"});
   const[showWeekly,setShowWeekly]=useState(false);
   const[quickAdd,setQuickAdd]=useState(null); // {member} — inline quick-add form
+  const[editTask,setEditTask]=useState(null); // 업무 수정 대상
   const[copied,setCopied]=useState(false);
   const[reportBase,setReportBase]=useState(selectedDate);
 
@@ -1224,7 +1271,8 @@ function PageTeam({tasks,ts,team,onToggle,onDelete,onUpdateTeam,selectedDate,onS
                 </div>
                 <div style={{fontSize:10,color:"var(--t3)",marginTop:2}}>{t.due+" · "+dday(t.due)}</div>
               </div>
-              <DelBtn onClick={()=>onDelete(t.id)}/>
+              <EditBtn onClick={()=>setEditTask(t)}/>
+              <DelBtn onClick={()=>{if(confirm("이 업무를 삭제할까요?"))onDelete(t.id)}}/>
             </div>;
           }):<div style={{fontSize:12,color:"var(--t3)",padding:"12px 0",textAlign:"center"}}>{selectedDate+"에 배정된 일정 없음"}</div>}
         </div>
@@ -1232,6 +1280,7 @@ function PageTeam({tasks,ts,team,onToggle,onDelete,onUpdateTeam,selectedDate,onS
     })}
 
     {quickAdd&&<QuickAddModal member={quickAdd.member} defaultDate={selectedDate} onSave={handleQuickSave} onClose={()=>setQuickAdd(null)}/>}
+    {editTask&&<TaskEditModal task={editTask} team={team} onSave={patch=>{onEditTask(editTask.id,patch);setEditTask(null)}} onClose={()=>setEditTask(null)}/>}
     {modal&&modal!=="weekly"&&<Modal title={modal==="add"?"팀원 추가":"팀원 수정"} onClose={()=>setModal(null)}>
       <FR label="이름 (한국어)"><input className="inp" value={form.name} onChange={e=>setForm(f=>({...f,name:e.target.value}))} placeholder="박혜연"/></FR>
       <FR label="역할"><input className="inp" value={form.role} onChange={e=>setForm(f=>({...f,role:e.target.value}))} placeholder="HR 매니저"/></FR>
@@ -1491,7 +1540,7 @@ const CAT_CLR={"일반 메모":"#64748B","노무/법적 이슈":"#DC2626","임�
 function loadMemos(){const m=SheetDB.get("memos");return Array.isArray(m)?m:[];}
 function saveMemos(m){SheetDB.setCollection("memos",m||[]);}
 
-function PageMemo({selectedDate}){
+function PageMemo({selectedDate,cloudRev}){
   const[memos,setMemos]=useState(()=>loadMemos());
   const[author,setAuthor]=useState("");
   const[cat,setCat]=useState(MEMO_CATS[0]);
@@ -1501,9 +1550,15 @@ function PageMemo({selectedDate}){
   const[err,setErr]=useState("");
   const[filterCat,setFilterCat]=useState("ALL");
   const[filterDate,setFilterDate]=useState("");
+  const fromCloud=useRef(false); // 클라우드发 갱신은 재저장(push) 안 함
 
   useEffect(()=>{setDate(selectedDate||todayStr)},[selectedDate]);
-  useSkipFirstEffect(()=>{saveMemos(memos)},[memos]);
+  useSkipFirstEffect(()=>{ if(fromCloud.current){fromCloud.current=false;return;} saveMemos(memos)},[memos]);
+  // 다른 사용자가 추가/삭제한 메모를 제자리 갱신 (cloudRev 신호 — 30초 주기/포커스/수동)
+  useSkipFirstEffect(()=>{
+    const fresh=loadMemos();
+    setMemos(prev=>{ if(JSON.stringify(prev)===JSON.stringify(fresh))return prev; fromCloud.current=true; return fresh; });
+  },[cloudRev]);
 
   function addMemo(){
     if(!author.trim()){setErr("작성자를 입력해주세요.");return;}
@@ -1694,7 +1749,7 @@ function GuideModal({onClose}){
 
 
 // ── Google Drive 연동 (GAS 경유) ────────────────────────────────────────────
-const GAS_DRIVE_URL = API_URL; // 4대보험 원본 파일 업로드도 동일한 Web App(GAS)을 통해 처리
+const GAS_DRIVE_URL = SHARED_API_URL; // 4대보험 원본 파일 업로드는 공유 저장용 Web App(SHARED_API_URL)을 통해 처리
 
 async function driveUploadFile(file, curYM) {
   return new Promise((resolve, reject) => {
@@ -1859,7 +1914,7 @@ function mergeData(pubRows,payRows){
   return rows;
 }
 
-function Page4Insurance(){
+function Page4Insurance({cloudRev}){
   const nowYM=()=>{const d=new Date();return d.getFullYear()+"."+(String(d.getMonth()+1).padStart(2,"0"))};
   const[curYM,setCurYM]=useState(nowYM);
   const[pubTypeOverride,setPubTypeOverride]=useState("auto");
@@ -1888,34 +1943,45 @@ function Page4Insurance(){
     setCurYM(ny+"."+(String(nm).padStart(2,"0")));
   }
 
-  // Load from localStorage when curYM changes
-  // isLoadingRef blocks the save useEffect from writing stale data during transition
-  useEffect(()=>{
-    isLoadingRef.current=true;  // lock: prevent save firing with old-month data
-    const saved=loadInsData(curYM);
+  // 한 달치 데이터를 캐시에서 읽어 화면 상태에 반영 (월 전환/클라우드 갱신 공용)
+  function applyMonthData(ym){
+    isLoadingRef.current=true;  // lock: prevent save firing with old/stale data
+    const saved=loadInsData(ym);
     if(saved){
       const pub=saved.pub||[];const pay=saved.pay||[];
       const m=mergeData(pub,pay);
       const savedChecked=saved.checked||{};
       const autoChecked={...savedChecked};
       m.forEach(r=>{if(r.autoOk)autoChecked[r.id]=true;});
-      // Batch all state updates so React processes them together
       setRawPub(pub);setRawPay(pay);
       setReasons(saved.reasons||{});setCustomReasons(saved.custom||{});
       setChecked(autoChecked);setMerged(m);setHasData(true);
     }else{
-      // New month: start with completely empty state
       setRawPub([]);setRawPay([]);
       setReasons({});setCustomReasons({});setChecked({});
       setMerged([]);setHasData(false);
     }
     setError("");
-    // Release lock after React flushes state updates (next microtask)
     setTimeout(()=>{isLoadingRef.current=false;},0);
+  }
+
+  // Load when curYM changes (월 전환)
+  useEffect(()=>{
+    applyMonthData(curYM);
     // Refresh Drive file list for new month (best-effort)
     setDriveFiles([]);
     driveFetchFileList(curYM).then(files=>setDriveFiles(files)).catch(()=>{});
   },[curYM]);
+
+  // 다른 사용자가 바꾼 4대보험 데이터를 제자리 갱신 (cloudRev 신호 — 30초 주기/포커스/수동)
+  // 내 저장 진행 중에는 syncFromCloud 가 막아주므로 작업 중 데이터가 덮어써지지 않음
+  useSkipFirstEffect(()=>{
+    const fresh=loadInsData(curYM);
+    const norm=o=>JSON.stringify({pub:(o&&o.pub)||[],pay:(o&&o.pay)||[],reasons:(o&&o.reasons)||{},custom:(o&&o.custom)||{},checked:(o&&o.checked)||{}});
+    const freshKey=fresh?norm(fresh):"none";
+    const curKey=(rawPub.length||rawPay.length)?norm({pub:rawPub,pay:rawPay,reasons,custom:customReasons,checked}):"none";
+    if(freshKey!==curKey)applyMonthData(curYM);
+  },[cloudRev]);
 
   // Auto-check zero-diff rows; save whenever data/reasons/checked change
   useEffect(()=>{
@@ -2469,7 +2535,7 @@ function Dashboard(){
   useSkipFirstEffect(()=>{saveRoutines(routines)},[routines]);
 
   // ── 다른 사용자의 변경분 동기화: 창 포커스 / 30초 주기 / 수동 버튼 ──
-  const reconcile=useCallback((data,remount)=>{
+  const reconcile=useCallback((data)=>{
     if(!data)return;
     const setIfDiff=(cur,next,setter)=>{ if(next!==undefined&&JSON.stringify(cur)!==JSON.stringify(next))setter(next); };
     setIfDiff(team,data.team,setTeam);
@@ -2479,17 +2545,17 @@ function Dashboard(){
     setIfDiff(routines,data.routines,setRoutines);
     if(data.gTmpl&&typeof data.gTmpl==="object")setIfDiff(gTmpl,data.gTmpl,setGTmpl);
     if(typeof data.adminName==="string"&&data.adminName)setIfDiff(adminName,data.adminName,setAdminName);
-    if(remount)setCloudRev(v=>v+1); // 메모/4대보험/체크리스트는 캐시 갱신 후 리마운트로 반영
+    setCloudRev(v=>v+1); // 메모/4대보험/체크리스트는 cloudRev 신호로 "제자리 갱신"(remount 아님) → 30초 주기에도 실시간 반영
   },[team,employees,tasks,ts,routines,gTmpl,adminName]);
-  const syncFromCloud=useCallback(async(remount)=>{
+  const syncFromCloud=useCallback(async()=>{
     if(SheetDB.pending()>0)return; // 내 저장이 진행 중이면 건너뜀(덮어쓰기 방지)
     const data=await SheetDB.refresh();
-    reconcile(data,remount);
+    reconcile(data);
   },[reconcile]);
   useEffect(()=>{
-    const onFocus=()=>syncFromCloud(true);
+    const onFocus=()=>syncFromCloud();
     window.addEventListener("focus",onFocus);
-    const iv=setInterval(()=>syncFromCloud(false),30000);
+    const iv=setInterval(()=>syncFromCloud(),30000);
     return()=>{window.removeEventListener("focus",onFocus);clearInterval(iv)};
   },[syncFromCloud]);
 
@@ -2516,6 +2582,7 @@ function Dashboard(){
     return()=>{delete window.__addTask};
   },[]);
   const onDelete=useCallback(id=>{setTasks(p=>p.filter(t=>t.id!==id));setTs(p=>{const s={...p};delete s[id];return s})},[]);
+  const onEditTask=useCallback((id,patch)=>{setTasks(p=>(p||[]).map(t=>t.id===id?{...t,...patch}:t))},[]);
   const onCalNav=dir=>setCalMonth(m=>{let nm=m+dir;if(nm>11){setCalYear(y=>y+1);return 0}if(nm<0){setCalYear(y=>y-1);return 11}return nm});
   const onAddCal=date=>{setSelectedDate(date);setModal("schedule")};
 
@@ -2602,7 +2669,7 @@ function Dashboard(){
                 <span style={{width:8,height:8,borderRadius:"50%",background:"#16A34A",display:"inline-block",flexShrink:0}}/>
                 구글 시트 바로가기
               </a>
-              <button className="btn btn-ghost" style={{fontSize:11,padding:"5px 12px"}} onClick={()=>{syncFromCloud(true);handleRefresh();setToast("최신 데이터 동기화 중...")}}>↻ 동기화</button>
+              <button className="btn btn-ghost" style={{fontSize:11,padding:"5px 12px"}} onClick={()=>{syncFromCloud();handleRefresh();setToast("최신 데이터 동기화 중...")}}>↻ 동기화</button>
               <button className="btn btn-ghost" style={{fontSize:11,padding:"5px 12px"}} onClick={()=>setModal("routine")}>정기 일정 관리</button>
               <button className="btn btn-ghost" style={{fontSize:11,padding:"5px 12px"}} onClick={()=>setModal("schedule")}>+ 일정 추가</button>
               <button className="btn btn-primary" style={{fontSize:11,padding:"5px 14px"}} onClick={()=>setModal("employee")}>+ 직원 추가</button>
@@ -2611,12 +2678,12 @@ function Dashboard(){
             </div>
           </header>
           <main className="pgcont">
-            {page==="home"&&<PageHome employees={employees||[]} tasks={tasks||[]} ts={ts||{}} apiRows={apiRows||[]} team={team||[]} calYear={calYear} calMonth={calMonth} onCalNav={onCalNav} onToggle={onToggle} onDelete={onDelete} onAddCal={onAddCal} selectedDate={selectedDate} onSelectDate={setSelectedDate}/>}
+            {page==="home"&&<PageHome employees={employees||[]} tasks={tasks||[]} ts={ts||{}} apiRows={apiRows||[]} team={team||[]} calYear={calYear} calMonth={calMonth} onCalNav={onCalNav} onToggle={onToggle} onDelete={onDelete} onEditTask={onEditTask} onAddCal={onAddCal} selectedDate={selectedDate} onSelectDate={setSelectedDate}/>}
             {page==="ob"&&<PageOB apiRows={apiRows||[]} apiStatus={apiStatus} team={team||[]} onRefresh={handleRefresh} gTmpl={gTmpl} setGTmpl={setGTmpl}/>}
-            {page==="team"&&<PageTeam tasks={tasks||[]} ts={ts||{}} team={team||[]} onToggle={onToggle} onDelete={onDelete} onUpdateTeam={setTeam} selectedDate={selectedDate} onSelectDate={setSelectedDate}/>}
+            {page==="team"&&<PageTeam tasks={tasks||[]} ts={ts||{}} team={team||[]} onToggle={onToggle} onDelete={onDelete} onEditTask={onEditTask} onUpdateTeam={setTeam} selectedDate={selectedDate} onSelectDate={setSelectedDate}/>}
             {page==="history"&&<PageHistory adminName={adminName} setAdminName={setAdminName} apiRows={apiRows||[]} setApiRows={setApiRows} apiStatus={apiStatus} setApiStatus={setApiStatus} apiUrl={apiUrl} setApiUrl={setApiUrl}/>}
-            {page==="memo"&&<PageMemo key={"memo_"+cloudRev} selectedDate={selectedDate}/>}
-            {page==="insurance"&&<Page4Insurance key={"ins_"+cloudRev}/>}
+            {page==="memo"&&<PageMemo cloudRev={cloudRev} selectedDate={selectedDate}/>}
+            {page==="insurance"&&<Page4Insurance cloudRev={cloudRev}/>}
           </main>
         </div>
       </div>
