@@ -1751,26 +1751,27 @@ function GuideModal({onClose}){
 // ── Google Drive 연동 (GAS 경유) ────────────────────────────────────────────
 const GAS_DRIVE_URL = SHARED_API_URL; // 4대보험 원본 파일 업로드는 공유 저장용 Web App(SHARED_API_URL)을 통해 처리
 
-async function driveUploadFile(file, curYM) {
+async function driveUploadFile(file, curYM, kind) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = async (e) => {
       try {
         const base64 = e.target.result.split(",")[1];
+        const taggedName = (kind ? ("[" + kind + "] ") : "") + file.name; // 유형 태그를 파일명에 부여
         const res = await fetch(GAS_DRIVE_URL, {
           method: "POST",
           mode: "no-cors",
           headers: { "Content-Type": "text/plain;charset=utf-8" },
           body: JSON.stringify({
             action: "uploadFile",
-            fileName: file.name,
+            fileName: taggedName,
             base64Data: base64,
             mimeType: file.type || "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             subFolderName: curYM,
           }),
         });
         // no-cors returns opaque response; assume success if no error thrown
-        resolve({ ok: true, fileName: file.name });
+        resolve({ ok: true, fileName: taggedName });
       } catch (err) {
         reject(err);
       }
@@ -1778,6 +1779,15 @@ async function driveUploadFile(file, curYM) {
     reader.onerror = reject;
     reader.readAsDataURL(file);
   });
+}
+
+// 드라이브 파일명에서 유형(건강보험/국민연금/급여대장) 판별
+function driveFileKind(name){
+  const n=String(name||"");
+  if(n.indexOf("[건강보험]")>=0||n.indexOf("건강")>=0)return "건강보험";
+  if(n.indexOf("[국민연금]")>=0||n.indexOf("연금")>=0)return "국민연금";
+  if(n.indexOf("[급여대장]")>=0||n.indexOf("급여")>=0)return "급여대장";
+  return "기타";
 }
 
 async function driveFetchFileList(curYM) {
@@ -1934,6 +1944,8 @@ function Page4Insurance({cloudRev}){
   const[driveUploading,setDriveUploading]=useState(false);
   const[driveStatus,setDriveStatus]=useState(""); // "", "uploading", "done", "err"
   const[showDrivePanel,setShowDrivePanel]=useState(false);
+  const[syncing,setSyncing]=useState(false);   // 이 달 강제 새로고침 진행중
+  const[lastSync,setLastSync]=useState("");     // 마지막 동기화 시각 표시
 
   // Navigate months
   function shiftMonth(dir){
@@ -1983,6 +1995,16 @@ function Page4Insurance({cloudRev}){
     if(freshKey!==curKey)applyMonthData(curYM);
   },[cloudRev]);
 
+  // 이 달 데이터를 서버에서 즉시 다시 불러오기 (수동 버튼)
+  async function forceReloadMonth(){
+    setSyncing(true);
+    try{ await SheetDB.refresh(); }catch(_){}   // 서버 최신 상태로 STORE.ins 갱신
+    applyMonthData(curYM);                        // 현재 월 화면 반영
+    driveFetchFileList(curYM).then(files=>setDriveFiles(files)).catch(()=>{});
+    setLastSync(new Date().toLocaleTimeString("ko-KR"));
+    setSyncing(false);
+  }
+
   // Auto-check zero-diff rows; save whenever data/reasons/checked change
   useEffect(()=>{
     if(merged.length>0){
@@ -2015,12 +2037,22 @@ function Page4Insurance({cloudRev}){
     reader.readAsArrayBuffer(file);
   }
 
+  // 드라이브 업로드(유형 태그 포함) — fire-and-forget
+  function uploadToDrive(file,kind){
+    if(!(GAS_DRIVE_URL&&GAS_DRIVE_URL!=="여기에_GAS_배포_URL_입력"))return;
+    setDriveUploading(true);setDriveStatus("uploading");
+    driveUploadFile(file,curYM,kind)
+      .then(()=>{setDriveStatus("done");driveFetchFileList(curYM).then(files=>setDriveFiles(files));})
+      .catch(()=>setDriveStatus("err"))
+      .finally(()=>setDriveUploading(false));
+  }
   function handlePub(e){
     const f=e.target.files[0];if(!f)return;
     setLoading("공단 고지서 처리 중...");setError("");
     readExcel(f,data=>{
       // Strict mode: user selection overrides auto-detect completely
       const insType=pubTypeOverride==="auto"?detectInsType(data):pubTypeOverride;
+      uploadToDrive(f,insType); // 건강보험/국민연금 유형 태그를 붙여 드라이브에 보관
       const newRows=insType==="국민연금"?parsePubPension(data):parsePubHealth(data);
       // Accumulate by RRN — different depts uploaded separately all survive
       setRawPub(prev=>{
@@ -2057,8 +2089,6 @@ function Page4Insurance({cloudRev}){
       });
     });
    
-    // Fire-and-forget Drive upload
-    if(GAS_DRIVE_URL&&GAS_DRIVE_URL!=="여기에_GAS_배포_URL_입력"){setDriveUploading(true);setDriveStatus("uploading");driveUploadFile(f,curYM).then(()=>{setDriveStatus("done");driveFetchFileList(curYM).then(setDriveFiles);}).catch(()=>setDriveStatus("err")).finally(()=>setDriveUploading(false));}
     e.target.value="";
   }
   function handlePay(e){
@@ -2081,8 +2111,7 @@ function Page4Insurance({cloudRev}){
         return next;
       });
     });
-    // Fire-and-forget Drive upload
-    if(GAS_DRIVE_URL&&GAS_DRIVE_URL!=="여기에_GAS_배포_URL_입력"){setDriveUploading(true);setDriveStatus("uploading");driveUploadFile(f,curYM).then(()=>{setDriveStatus("done");driveFetchFileList(curYM).then(setDriveFiles);}).catch(()=>setDriveStatus("err")).finally(()=>setDriveUploading(false));}
+    uploadToDrive(f,"급여대장"); // 급여대장 유형 태그를 붙여 드라이브에 보관
     e.target.value="";
   }
 
@@ -2241,7 +2270,11 @@ function Page4Insurance({cloudRev}){
       <div style={{flex:1,textAlign:"center"}}>
         <div style={{fontSize:16,fontWeight:800,color:"var(--sky-deep)",letterSpacing:".05em"}}>{curYM} 4대보험 검증</div>
         <div style={{fontSize:10,color:"var(--t3)",marginTop:2}}>{hasData?"데이터 저장됨 — 새로고침 후에도 유지됩니다":"데이터 없음 — 파일을 업로드해주세요"}</div>
+        <div style={{fontSize:10,marginTop:3,fontWeight:600,color:SheetDB.getIns(curYM)?"#16A34A":"#DC2626"}}>
+          {"클라우드 공유: 이 달("+curYM+") "+(SheetDB.getIns(curYM)?"데이터 있음 ●":"데이터 없음 ○")}{lastSync?(" · 마지막 동기화 "+lastSync):""}
+        </div>
       </div>
+      <button className="btn btn-ghost btn-sm" onClick={forceReloadMonth} disabled={syncing} title="이 달 데이터를 서버에서 즉시 다시 불러옵니다" style={{fontWeight:700}}>{syncing?"동기화 중…":"↻ 이 달 새로고침"}</button>
       <button className="btn btn-ghost btn-sm" onClick={()=>shiftMonth(1)} style={{fontWeight:700}}>다음달 &#8250;</button>
     </div>
 
@@ -2266,26 +2299,29 @@ function Page4Insurance({cloudRev}){
           onClick={()=>driveFetchFileList(curYM).then(setDriveFiles)}>새로고침</button>
       </div>
       <div className="card-body">
-        {driveFiles.length===0?
-          <div style={{textAlign:"center",padding:"16px 0",color:"var(--t3)",fontSize:12}}>
-            {GAS_DRIVE_URL==="여기에_GAS_배포_URL_입력"?"GAS URL을 설정하면 드라이브 파일 목록이 표시됩니다.":"이 달에 드라이브에 저장된 파일이 없습니다."}
-          </div>:
-          driveFiles.map(f=><div key={f.id} style={{display:"flex",alignItems:"center",gap:10,padding:"8px 0",borderBottom:"1px solid var(--border)"}}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="18" height="18" rx="2" fill="#34A853" opacity=".15"/><path d="M8 12h8M8 16h5" stroke="#34A853" strokeWidth="1.5" strokeLinecap="round"/><path d="M8 8h3" stroke="#34A853" strokeWidth="1.5" strokeLinecap="round"/></svg>
-            <div style={{flex:1,minWidth:0}}>
-              <div style={{fontSize:12,fontWeight:600,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{f.name}</div>
-              <div style={{fontSize:10,color:"var(--t3)"}}>{f.updatedAt+" · "+(f.size?Math.round(f.size/1024)+"KB":"")}</div>
-            </div>
-            <a href={f.downloadUrl} target="_blank" rel="noopener noreferrer"
-              style={{fontSize:10,padding:"4px 10px",borderRadius:7,border:"1px solid #34A85340",background:"#F0FDF4",color:"#16A34A",fontWeight:600,textDecoration:"none",whiteSpace:"nowrap"}}>
-              다운로드
-            </a>
-            <a href={f.url} target="_blank" rel="noopener noreferrer"
-              style={{fontSize:10,padding:"4px 10px",borderRadius:7,border:"1px solid var(--border2)",background:"var(--sky-l)",color:"var(--sky-d)",fontWeight:600,textDecoration:"none",whiteSpace:"nowrap"}}>
-              열기
-            </a>
-          </div>)
-        }
+        {(()=>{
+          if(GAS_DRIVE_URL==="여기에_GAS_배포_URL_입력"){
+            return <div style={{textAlign:"center",padding:"16px 0",color:"var(--t3)",fontSize:12}}>GAS URL을 설정하면 드라이브 파일 목록이 표시됩니다.</div>;
+          }
+          const all=(driveFiles||[]).slice().sort((a,b)=>new Date(b.createdAt||0)-new Date(a.createdAt||0)); // 최신순
+          const KINDS=[["건강보험","#0EA5E9","#E0F2FE"],["국민연금","#16A34A","#F0FDF4"],["급여대장","#8B5CF6","#F5F3FF"]];
+          return KINDS.map(([kind,clr,bg])=>{
+            const f=all.find(x=>driveFileKind(x.name)===kind); // 정렬이 최신순이므로 첫 매칭 = 그 유형의 최신
+            return <div key={kind} style={{display:"flex",alignItems:"center",gap:10,padding:"9px 0",borderBottom:"1px solid var(--border)"}}>
+              <span style={{fontSize:10,fontWeight:700,color:clr,background:bg,border:"1px solid "+clr+"40",borderRadius:7,padding:"4px 8px",flexShrink:0,minWidth:62,textAlign:"center"}}>{kind}</span>
+              {f?<>
+                <div style={{flex:1,minWidth:0}}>
+                  <div style={{fontSize:12,fontWeight:600,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{f.name}</div>
+                  <div style={{fontSize:10,color:"#16A34A",fontWeight:600}}>{"최신"+(f.createdAt?" · "+new Date(f.createdAt).toLocaleString("ko-KR"):"")}</div>
+                </div>
+                <a href={f.downloadUrl} target="_blank" rel="noopener noreferrer"
+                  style={{fontSize:10,padding:"4px 10px",borderRadius:7,border:"1px solid #34A85340",background:"#F0FDF4",color:"#16A34A",fontWeight:600,textDecoration:"none",whiteSpace:"nowrap"}}>다운로드</a>
+                <a href={f.url} target="_blank" rel="noopener noreferrer"
+                  style={{fontSize:10,padding:"4px 10px",borderRadius:7,border:"1px solid var(--border2)",background:"var(--sky-l)",color:"var(--sky-d)",fontWeight:600,textDecoration:"none",whiteSpace:"nowrap"}}>열기</a>
+              </>:<div style={{flex:1,fontSize:11,color:"var(--t3)"}}>아직 업로드되지 않음</div>}
+            </div>;
+          });
+        })()}
       </div>
     </div>}
 
@@ -2294,10 +2330,6 @@ function Page4Insurance({cloudRev}){
       <div className="card-hd">
         <div className="card-title">파일 업로드</div>
         <div style={{display:"flex",alignItems:"center",gap:8}}>
-          <a href="https://cocen365-my.sharepoint.com/:f:/p/hypark/IgDdgqbkLES7R7q4dxCwF3enATgZU8WexodnumAzkvTQocY?e=qlnxXq" target="_blank" rel="noopener noreferrer"
-            style={{display:"inline-flex",alignItems:"center",gap:6,fontSize:11,padding:"5px 13px",borderRadius:8,border:"none",background:"#0078d4",color:"#fff",fontWeight:700,textDecoration:"none",whiteSpace:"nowrap",flexShrink:0}}>
-            4대보험 고지서 원드라이브 공유폴더
-          </a>
           <span style={{fontSize:11,color:"var(--t2)",fontWeight:600}}>공단 고지서 종류:</span>
           {INS_TYPES.map(v=><button key={v} onClick={()=>setPubTypeOverride(v)}
             style={{padding:"4px 10px",borderRadius:7,fontSize:10,fontWeight:600,cursor:"pointer",fontFamily:"inherit",border:"1.5px solid "+(pubTypeOverride===v?"var(--sky-d)":"var(--border2)"),background:pubTypeOverride===v?"var(--sky-l)":"#fff",color:pubTypeOverride===v?"var(--sky-d)":"var(--t3)"}}>
