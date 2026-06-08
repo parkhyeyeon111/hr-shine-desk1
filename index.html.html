@@ -3,11 +3,34 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-<title>HR SHINE DESK v14</title>
+<title>HR SHINE DESK v15</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+/* 안전 진단 오버레이: 오류를 기록만 하고, 로드 후 일정 시간 지나도 화면이 비어 있을 때만 안내 표시 (정상 렌더를 절대 방해하지 않음) */
+(function(){
+  var lastErr="";
+  window.addEventListener("error",function(e){ var m=(e&&e.message)||(e&&e.error&&e.error.message); if(m&&m!=="Script error.")lastErr=m; });
+  window.addEventListener("unhandledrejection",function(e){ try{ if(e&&e.reason)lastErr=String(e.reason.message||e.reason); }catch(_){} });
+  function check(){
+    var r=document.getElementById("root");
+    if(!r||r.firstChild)return; // 이미 렌더됐으면 아무것도 하지 않음
+    var html;
+    if(typeof window.React==="undefined"||typeof window.ReactDOM==="undefined"||typeof window.Babel==="undefined"){
+      html='<div style="font-size:18px;font-weight:700;color:#b45309;margin-bottom:10px">필수 라이브러리를 불러오지 못했습니다</div>'
+        +'React / Babel(cdnjs) 로딩이 차단된 것 같아요. 인터넷 연결 또는 사내 방화벽이 <b>cdnjs.cloudflare.com</b> 을 막는지 확인 후 새로고침(F5) 해주세요.';
+    }else{
+      html='<div style="font-size:16px;font-weight:700;margin-bottom:8px">화면이 아직 표시되지 않았습니다</div>'
+        +(lastErr?('<div style="background:#FEF2F2;border:1px solid #FECACA;border-radius:8px;padding:12px;font-family:monospace;font-size:13px;color:#991B1B;white-space:pre-wrap;margin:8px 0">'+lastErr+'</div>'):'')
+        +'잠시 후에도 빈 화면이면 새로고침(F5), 그래도 같으면 콘솔(F12 → Console)의 빨간 메시지를 캡처해 알려주세요.';
+    }
+    r.innerHTML='<div style="padding:28px;font-family:Noto Sans KR,sans-serif;color:#334155;max-width:760px;margin:40px auto;line-height:1.6">'+html+'</div>';
+  }
+  window.addEventListener("load",function(){ setTimeout(check,5000); });
+})();
+</script>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
 <style>
 
@@ -151,7 +174,7 @@ const {useState,useEffect,useMemo,useCallback,useRef}=React;
 // [업무이력] 기존 업무이력(verify1/verify2/append/history) 연동용 — 기존 배포 그대로 유지
 const API_URL="https://script.google.com/macros/s/AKfycbzd8dkOgHBHcsauhB4H2ASU_mdJ9aSAS0IZi66kmwHaXy1QJq3sftoRyPjjxaqZamGjLw/exec";
 // [공유 저장] 팀/직원/일정/메모/4대보험/드라이브 등 실시간 공유 저장용 — 새로 배포한 Web App URL
-const SHARED_API_URL="https://script.google.com/macros/s/AKfycbzz_TdnCp0kVuSc2zr2stTQY7Xc0VLTcrzSCw1BeE1hFyz7R7gARa0PV-ZiBuF_tl9r/exec";
+const SHARED_API_URL="https://script.google.com/macros/s/AKfycbwUkJSv7QiM9NVJ4eoK9mLyaBs1B7K2nbnyHnZy-ie0OZAJ_x06jy0_SjQXQM8GSBJO/exec";
 const LS_KEY="hr_v15";
 const GTMPL_KEY="hr_v15_gtmpl";
 const ROUTINE_KEY="hr_v15_routines";
@@ -183,19 +206,27 @@ const SheetDB=(function(){
   const MIRROR="hr_shine_cloud_mirror_v2";
   const STORE={team:null,employees:null,tasks:null,ts:null,routines:null,memos:null,
     gTmpl:null,guide:null,adminName:null,cl:{},ins:{}};
-  let ready=false, pending=0, status="idle";
+  let ready=false, status="idle";
+  const dirty=new Set(); // 아직 서버에 반영 안 된(전송 대기/진행중) 컬렉션 키 집합 — applyState 보호에 사용
   const listeners=new Set();
   const emit=s=>{status=s;listeners.forEach(fn=>{try{fn(s)}catch(e){}})};
   const readMirror=()=>{try{const s=localStorage.getItem(MIRROR);return s?JSON.parse(s):null}catch{return null}};
   const writeMirror=()=>{try{localStorage.setItem(MIRROR,JSON.stringify(STORE))}catch(e){}};
   function applyState(d){
     if(!d||typeof d!=="object")return;
-    ["team","employees","tasks","routines","memos"].forEach(k=>{if(Array.isArray(d[k]))STORE[k]=d[k];});
-    ["ts","gTmpl"].forEach(k=>{if(d[k]&&typeof d[k]==="object"&&!Array.isArray(d[k]))STORE[k]=d[k];});
-    if(typeof d.guide==="string")STORE.guide=d.guide;
-    if(typeof d.adminName==="string"&&d.adminName)STORE.adminName=d.adminName;
-    if(d.cl&&typeof d.cl==="object")STORE.cl=d.cl;
-    if(d.ins&&typeof d.ins==="object")STORE.ins=d.ins;
+    // 저장 진행 중(dirty)인 컬렉션은 서버 값으로 덮어쓰지 않음 → 방금 올린 내 변경이 동기화에 밀려 사라지는 사고 방지
+    ["team","employees","tasks","routines","memos"].forEach(k=>{if(Array.isArray(d[k])&&!dirty.has(k))STORE[k]=d[k];});
+    ["ts","gTmpl"].forEach(k=>{if(d[k]&&typeof d[k]==="object"&&!Array.isArray(d[k])&&!dirty.has(k))STORE[k]=d[k];});
+    if(typeof d.guide==="string"&&!dirty.has("guide"))STORE.guide=d.guide;
+    if(typeof d.adminName==="string"&&d.adminName&&!dirty.has("adminName"))STORE.adminName=d.adminName;
+    if(d.cl&&typeof d.cl==="object"){ // 체크리스트: 키 단위 병합(진행 중 키는 보존)
+      Object.keys(STORE.cl).forEach(key=>{if(!(key in d.cl)&&!dirty.has("cl:"+key))delete STORE.cl[key];});
+      Object.keys(d.cl).forEach(key=>{if(!dirty.has("cl:"+key))STORE.cl[key]=d.cl[key];});
+    }
+    if(d.ins&&typeof d.ins==="object"){ // 4대보험: 월 단위 병합(진행 중 월은 보존)
+      Object.keys(STORE.ins).forEach(ym=>{if(!(ym in d.ins)&&!dirty.has("ins:"+ym))delete STORE.ins[ym];});
+      Object.keys(d.ins).forEach(ym=>{if(!dirty.has("ins:"+ym))STORE.ins[ym]=d.ins[ym];});
+    }
   }
   async function boot(){
     emit("loading");
@@ -212,16 +243,19 @@ const SheetDB=(function(){
   }
   const timers={};
   function schedulePush(payload,key){
-    pending++; emit("saving");
-    if(timers[key])clearTimeout(timers[key]);
+    dirty.add(key); emit("saving");
+    if(timers[key])clearTimeout(timers[key]);   // 같은 키 연속 변경은 마지막 1건만 전송(디바운스)
     timers[key]=setTimeout(async()=>{
       try{
         await fetch(SHARED_API_URL,{method:"POST",mode:"no-cors",
           headers:{"Content-Type":"text/plain;charset=utf-8"},
           body:JSON.stringify(payload)});
-        pending=Math.max(0,pending-1);
-        if(pending===0)emit("saved");
-      }catch(e){pending=Math.max(0,pending-1);emit("error");}
+      }catch(e){/* no-cors 라 실패를 읽을 수 없음 — 무시 */}
+      finally{
+        delete timers[key];
+        dirty.delete(key);                        // 키 단위로 정확히 해제 → pending 누수 없음
+        emit(dirty.size===0?"saved":"saving");
+      }
     },450);
   }
   function setCollection(collection,value){
@@ -232,19 +266,37 @@ const SheetDB=(function(){
     if(!ready)return;            // ⚠ 부트 완료 전에는 절대 push 금지 (빈 데이터로 시트를 덮어쓰는 사고 방지)
     schedulePush({action:"replace",collection,value},collection);
   }
+  // 즉시(디바운스 없이) 전송하고, 전송이 완료될 때까지 기다림(await).
+  // 4대보험처럼 "락을 푸시 완료 직후에만 풀어야" 하는 유실-민감 경로 전용.
+  async function pushNow(collection,value){
+    if(collection.indexOf("cl:")===0){STORE.cl[collection.slice(3)]=value;}
+    else if(collection.indexOf("ins:")===0){const ym=collection.slice(4);if(value===null)delete STORE.ins[ym];else STORE.ins[ym]=value;}
+    else {STORE[collection]=value;}
+    writeMirror();
+    if(!ready)return false;
+    if(timers[collection]){clearTimeout(timers[collection]);delete timers[collection];} // 보류 중 디바운스 취소(중복 전송 방지)
+    dirty.add(collection); emit("saving");
+    try{
+      await fetch(SHARED_API_URL,{method:"POST",mode:"no-cors",
+        headers:{"Content-Type":"text/plain;charset=utf-8"},
+        body:JSON.stringify({action:"replace",collection,value})});
+      return true;
+    }catch(e){ return false; }
+    finally{ dirty.delete(collection); emit(dirty.size===0?"saved":"saving"); }
+  }
   async function refresh(){
     try{
       const res=await fetch(SHARED_API_URL+"?action=getState&t="+Date.now());
       if(!res.ok)throw new Error();
       const data=await res.json(); applyState(data); writeMirror();
-      if(status!=="saving"&&pending===0)emit("saved");
+      if(status!=="saving"&&dirty.size===0)emit("saved");
       return data;
     }catch(e){return null;}
   }
-  return {boot,refresh,setCollection,
+  return {boot,refresh,setCollection,pushNow,
     onStatus:fn=>{listeners.add(fn);fn(status);return()=>listeners.delete(fn);},
     get:k=>STORE[k], getCL:key=>STORE.cl[key], getIns:ym=>STORE.ins[ym],
-    isReady:()=>ready, pending:()=>pending, status:()=>status, STORE};
+    isReady:()=>ready, pending:()=>dirty.size, status:()=>status, STORE};
 })();
 
 /* 기존 localStorage 헬퍼 → SheetDB 캐시 기반으로 전환 (호출부는 그대로 유지) */
@@ -1809,11 +1861,13 @@ const INS_TYPES=["건강보험","국민연금"];
 function fmtNum(v){if(v===null||v===undefined||v==="")return 0;const n=Number(String(v).replace(/,/g,"").replace(/\s/g,"").trim());return isNaN(n)?0:n;}
 function fmtKRW(v){return Number(v||0).toLocaleString("ko-KR");}
 function maskRRN(v){
-  const s=String(v||"").replace(/-/g,"").replace(/\s/g,"");
+  const s=rrnDigits(v);
   if(s.length>=13)return s.slice(0,6)+"-"+s[6]+"******";
   if(s.length>=7)return s.slice(0,6)+"-"+"*".repeat(s.length-6);
-  return v;
+  return s||String(v||"");
 }
+// ★ 주민등록번호 키 정제 규격 일원화: 하이픈·공백·기타 모든 비숫자 제거 → 순수 숫자만 (가이드 1)
+function rrnDigits(v){return String(v==null?"":v).replace(/[^0-9]/g,"");}
 function getInsKey(ym){return INS_LS_PREFIX+ym;}
 function loadInsData(ym){const d=SheetDB.getIns(ym);return d||null;}
 function saveInsData(ym,data){SheetDB.setCollection("ins:"+ym,data);}
@@ -1845,7 +1899,8 @@ function parsePubHealth(data){
   for(let i=1;i<data.length;i++){
     const r=data[i];
     if(!r||!r[6]||String(r[6]).trim()==="")continue;
-    const key=String(r[7]||"").trim().replace(/-/g,"")||"_"+String(r[6]).trim()+i;
+    const rk=rrnDigits(r[7]);                                   // 순수 숫자 13자리로 정제
+    const key=rk||("_"+String(r[6]).trim()+"_"+i);             // 불완전/빈 주민번호 → _이름_행번호 (가이드 2)
     if(rrnMap[key]){
       // Accumulate: same person appears multiple times → sum all amounts
       rrnMap[key].health    +=fmtNum(r[38]);
@@ -1855,7 +1910,7 @@ function parsePubHealth(data){
     }else{
       rrnMap[key]={
         yearMonth:String(r[0]||"").trim(),name:String(r[6]||"").trim(),
-        rrn:String(r[7]||"").trim(),dept:String(r[8]||"").trim(),empId:String(r[9]||"").trim(),
+        rrn:rk,dept:String(r[8]||"").trim(),empId:String(r[9]||"").trim(),
         health:fmtNum(r[38]),care:fmtNum(r[39]),
         healthAdj:fmtNum(r[40])+fmtNum(r[42]),careAdj:fmtNum(r[41])+fmtNum(r[43]),
         pension:0,insType:"건강보험",
@@ -1871,13 +1926,14 @@ function parsePubPension(data){
   for(let i=1;i<data.length;i++){
     const r=data[i];
     if(!r||!r[2]||String(r[2]).trim()==="")continue;
-    const key=String(r[3]||"").trim().replace(/-/g,"")||"_"+String(r[2]).trim()+i;
+    const rk=rrnDigits(r[3]);                                   // 순수 숫자 정제
+    const key=rk||("_"+String(r[2]).trim()+"_"+i);             // 빈 주민번호 → _이름_행번호
     if(rrnMap[key]){
       rrnMap[key].pension+=fmtNum(r[18]);
     }else{
       rrnMap[key]={
         yearMonth:String(r[0]||"").trim(),name:String(r[2]||"").trim(),
-        rrn:String(r[3]||"").trim(),dept:String(r[4]||"").trim(),empId:String(r[5]||"").trim(),
+        rrn:rk,dept:String(r[4]||"").trim(),empId:String(r[5]||"").trim(),
         health:0,care:0,healthAdj:0,careAdj:0,
         pension:fmtNum(r[18]),insType:"국민연금",
       };
@@ -1887,39 +1943,80 @@ function parsePubPension(data){
 }
 
 function parsePay(data){
-  const rows=[];
-  for(let i=1;i<data.length;i++){
+  if(!data||!data.length)return [];
+  // 1) 헤더 행 자동 탐색: 위에 제목/빈 행이 있어도 '성명/이름' 이 있는 행을 데이터 헤더로 인식
+  let hdr=-1;
+  for(let i=0;i<Math.min(12,data.length);i++){
+    const j=(data[i]||[]).map(c=>String(c||"")).join("|");
+    if(/성\s*명|이\s*름/.test(j)){ hdr=i; break; }
+  }
+  // 2) 키 열 위치: 헤더에서 찾고, 못 찾으면 기존 고정 인덱스로 폴백 (성명C/주민D/사번B/사업부K/귀속A)
+  const H=hdr>=0?(data[hdr]||[]).map(c=>String(c||"").replace(/\s/g,"")):[];
+  const col=(fixed,keys)=>{ if(hdr>=0){for(let c=0;c<H.length;c++)for(const k of keys)if(H[c].indexOf(k)>=0)return c;} return fixed; };
+  const cName=col(2,["성명","이름"]);
+  const cRrn =col(3,["주민"]);
+  const cEmp =col(1,["사번","사원번호","사원코드"]);
+  const cDept=col(10,["사업부","부서","소속","부문","팀","법인"]);
+  const cYm  =col(0,["귀속","연월","년월"]);
+  const start=hdr>=0?hdr+1:1;
+  // 3) 금액은 기존 고정 컬럼 사용(EN 정상 동작 검증됨): 연금 E+F / 건강 G / 건강정산 H / 요양 I / 요양정산 J
+  const map={};
+  for(let i=start;i<data.length;i++){
     const r=data[i];
-    if(!r||!r[2]||String(r[2]).trim()==="")continue;
-    rows.push({
-      yearMonth:String(r[0]||"").trim(),empId:String(r[1]||"").trim(),
-      name:String(r[2]||"").trim(),rrn:String(r[3]||"").trim(),dept:String(r[10]||"").trim(),
+    const name=r?String(r[cName]||"").trim():"";
+    if(!name)continue;
+    const rk=rrnDigits(r[cRrn]);
+    const key=rk||("_"+name+"_"+i);
+    const row={
+      yearMonth:String(r[cYm]||"").trim(),empId:String(r[cEmp]||"").trim(),
+      name,rrn:rk,dept:String(r[cDept]||"").trim(),
       pension:fmtNum(r[4])+fmtNum(r[5]),  // E(연금)+F(연금정산) 합산
       health:fmtNum(r[6]),care:fmtNum(r[8]),
       healthAdj:fmtNum(r[7]),careAdj:fmtNum(r[9]),
-    });
+    };
+    if(map[key]){ // 동일 인물 중복 행 → 합산
+      map[key].pension+=row.pension; map[key].health+=row.health; map[key].care+=row.care;
+      map[key].healthAdj+=row.healthAdj; map[key].careAdj+=row.careAdj;
+    }else{ map[key]=row; }
   }
-  return rows;
+  return Object.values(map);
 }
 
 function mergeData(pubRows,payRows){
-  const payMap={};
-  payRows.forEach(r=>{const k=String(r.rrn).replace(/-/g,"").replace(/\s/g,"");if(k)payMap[k]=r});
-  const rows=pubRows.map(pub=>{
-    const k=String(pub.rrn).replace(/-/g,"").replace(/\s/g,"");
+  // pub(공단)·pay(급여) 를 정제된 순수숫자 주민번호 기준으로 합집합 매칭.
+  // ★ 방어: 시트에서 불러온 값이 배열이 아닐 수 있으므로 강제 보정(.forEach 예외 방지)
+  const P=Array.isArray(pubRows)?pubRows:[];
+  const Y=Array.isArray(payRows)?payRows:[];
+  const pubMap={}, payMap={}, order=[], seen={};
+  const add=(k)=>{ if(!seen[k]){seen[k]=1;order.push(k);} };
+  P.forEach((r,i)=>{ if(!r||typeof r!=="object")return; const k=rrnDigits(r.rrn)||("_p_"+(r.name||"무명")+"_"+i); pubMap[k]=r; add(k); });
+  Y.forEach((r,i)=>{ if(!r||typeof r!=="object")return; const k=rrnDigits(r.rrn)||("_y_"+(r.name||"무명")+"_"+i); payMap[k]=r; add(k); });
+
+  const num=(v)=>{const n=Number(v);return isNaN(n)?0:n;};
+  const rows=order.map(k=>{
+    const pub=pubMap[k]||{};
     const pay=payMap[k]||null;
-    const diffHealth=pub.health-(pay?pay.health:0);
-    const diffCare=pub.care-(pay?pay.care:0);
-    const diffHealthAdj=pub.healthAdj-(pay?pay.healthAdj:0);
-    const diffCareAdj=pub.careAdj-(pay?pay.careAdj:0);
-    const diffPension=pub.pension-(pay?pay.pension:0);
+    const ph=num(pub.health), pc=num(pub.care), pha=num(pub.healthAdj), pca=num(pub.careAdj), pp=num(pub.pension);
+    const yH=pay?num(pay.health):0, yC=pay?num(pay.care):0, yHA=pay?num(pay.healthAdj):0, yCA=pay?num(pay.careAdj):0, yP=pay?num(pay.pension):0;
+    const diffHealth=ph-yH, diffCare=pc-yC, diffHealthAdj=pha-yHA, diffCareAdj=pca-yCA, diffPension=pp-yP;
     const mismatch=diffHealth!==0||diffCare!==0||diffHealthAdj!==0||diffCareAdj!==0||diffPension!==0;
-    return{...pub,pay,diffHealth,diffCare,diffHealthAdj,diffCareAdj,diffPension,mismatch,autoOk:!mismatch,id:k||pub.name+pub.empId};
+    return {
+      name:String(pub.name||(pay&&pay.name)||""),
+      dept:String(pub.dept||(pay&&pay.dept)||""),
+      rrn:(k.charAt(0)==="_")?String(pub.rrn||(pay&&pay.rrn)||""):k,
+      empId:String(pub.empId||(pay&&pay.empId)||""),
+      yearMonth:String(pub.yearMonth||(pay&&pay.yearMonth)||""),
+      insType:String(pub.insType||""),
+      health:ph,care:pc,healthAdj:pha,careAdj:pca,pension:pp,
+      pay,
+      diffHealth,diffCare,diffHealthAdj,diffCareAdj,diffPension,
+      mismatch,autoOk:!mismatch,id:k
+    };
   });
-  // Mismatch first, then normal (both sorted by name within group)
+  // Mismatch first, then normal (both sorted by name within group) — name 은 위에서 String 보정됨
   rows.sort((a,b)=>{
     if(b.mismatch!==a.mismatch)return(b.mismatch?1:0)-(a.mismatch?1:0);
-    return(a.name||"").localeCompare(b.name||"","ko");
+    return String(a.name||"").localeCompare(String(b.name||""),"ko");
   });
   return rows;
 }
@@ -1939,13 +2036,13 @@ function Page4Insurance({cloudRev}){
   const[deptDeleteSel,setDeptDeleteSel]=useState("");
   const[rawPub,setRawPub]=useState([]);
   const[rawPay,setRawPay]=useState([]);
-  const isLoadingRef=useRef(false); // blocks save during month-switch load
   const[driveFiles,setDriveFiles]=useState([]);
   const[driveUploading,setDriveUploading]=useState(false);
   const[driveStatus,setDriveStatus]=useState(""); // "", "uploading", "done", "err"
   const[showDrivePanel,setShowDrivePanel]=useState(false);
   const[syncing,setSyncing]=useState(false);   // 이 달 강제 새로고침 진행중
   const[lastSync,setLastSync]=useState("");     // 마지막 동기화 시각 표시
+  const[savedAt,setSavedAt]=useState("");       // 마지막 저장(검증 결과 반영) 시각 표시
 
   // Navigate months
   function shiftMonth(dir){
@@ -1955,74 +2052,92 @@ function Page4Insurance({cloudRev}){
     setCurYM(ny+"."+(String(nm).padStart(2,"0")));
   }
 
-  // 한 달치 데이터를 캐시에서 읽어 화면 상태에 반영 (월 전환/클라우드 갱신 공용)
-  function applyMonthData(ym){
-    isLoadingRef.current=true;  // lock: prevent save firing with old/stale data
-    const saved=loadInsData(ym);
-    if(saved){
-      const pub=saved.pub||[];const pay=saved.pay||[];
-      const m=mergeData(pub,pay);
-      const savedChecked=saved.checked||{};
-      const autoChecked={...savedChecked};
-      m.forEach(r=>{if(r.autoOk)autoChecked[r.id]=true;});
-      setRawPub(pub);setRawPay(pay);
-      setReasons(saved.reasons||{});setCustomReasons(saved.custom||{});
-      setChecked(autoChecked);setMerged(m);setHasData(true);
-    }else{
-      setRawPub([]);setRawPay([]);
-      setReasons({});setCustomReasons({});setChecked({});
-      setMerged([]);setHasData(false);
-    }
-    setError("");
-    setTimeout(()=>{isLoadingRef.current=false;},0);
+  // ───────── 4대보험: 단일 진실 소스(liveRef) + 업로드/편집 락(isLoadingRef) ─────────
+  const liveRef=useRef({pub:[],pay:[],reasons:{},custom:{},checked:{}}); // 현재 월 최종 병합 데이터(항상 최신)
+  const isLoadingRef=useRef(false); // true 동안 외부 동기화(cloudRev)가 화면을 덮어쓰지 못함
+  const driveQueue=useRef(Promise.resolve()); // 원본파일 업로드 직렬 큐 (GAS 동시 부하 방지)
+  const commitChain=useRef(Promise.resolve()); // 시트 저장 직렬 큐 (겹침 방지)
+  const commitPending=useRef(0);               // 진행 중인 저장 건수 (0 이 될 때만 락 해제)
+
+  // 매칭/누적 키: 순수숫자 주민번호 우선, 없으면 이름+사번+사업부로 고유키(사업부 간 충돌 방지)
+  function insKeyOf(r){return rrnDigits(r.rrn)||("_"+(r.name||"")+"_"+(r.empId||"")+"_"+(r.dept||""));}
+  function insSerial(o){return JSON.stringify({pub:(o&&o.pub)||[],pay:(o&&o.pay)||[],reasons:(o&&o.reasons)||{},custom:(o&&o.custom)||{},checked:(o&&o.checked)||{}});}
+  function insHas(o){return !!(o&&((Array.isArray(o.pub)&&o.pub.length)||(Array.isArray(o.pay)&&o.pay.length)));}
+
+  // 데이터(d)를 화면+liveRef 에 반영만 (저장 안 함). 로드/외부수신 전용.
+  function applyLoad(d){
+    // ★ 방어: 배열 강제 + null/비객체 행 제거 (불러온 데이터에 섞인 손상 행으로 인한 렌더 크래시 방지)
+    const arr=(v)=>(Array.isArray(v)?v:[]).filter(r=>r&&typeof r==="object");
+    const pub=arr(d&&d.pub), pay=arr(d&&d.pay);
+    const obj=(v)=>(v&&typeof v==="object"&&!Array.isArray(v))?v:{};
+    const m=mergeData(pub,pay);
+    const chk={...obj(d&&d.checked)};
+    m.forEach(r=>{if(r.autoOk)chk[r.id]=true;}); // 차액 0원 → 자동검증
+    liveRef.current={pub,pay,reasons:obj(d&&d.reasons),custom:obj(d&&d.custom),checked:chk};
+    setRawPub(pub);setRawPay(pay);
+    setReasons(liveRef.current.reasons);setCustomReasons(liveRef.current.custom);
+    setChecked(chk);setMerged(m);setHasData(pub.length>0||pay.length>0);setError("");
   }
 
-  // Load when curYM changes (월 전환)
+  // 모든 사용자 변경의 단일 저장 경로:
+  //  ① 락 ON → ② 화면+liveRef 반영 → ③ "최신 구조화 데이터"를 직접 인자로 즉시 전송하고 완료까지 대기
+  //  → ④ 전송이 완벽히 성공한 직후에만 락 OFF. (요구사항 1·2)
+  function commit(next){
+    // ① 화면 + liveRef 즉시 동기 반영 (다음 업로드가 이 스냅샷을 시드로 누적 → 사업부 누적 보존)
+    const arr=(v)=>(Array.isArray(v)?v:[]).filter(r=>r&&typeof r==="object");
+    const pub=arr(next&&next.pub), pay=arr(next&&next.pay);
+    const m=mergeData(pub,pay);
+    const chk={...(next.checked||{})};
+    m.forEach(r=>{if(r.autoOk)chk[r.id]=true;});
+    const payload={pub,pay,reasons:next.reasons||{},custom:next.custom||{},checked:chk};
+    liveRef.current=payload;                 // 단일 진실로 즉시 고정(동기) — race 로 되돌려지지 않음
+    setRawPub(pub);setRawPay(pay);
+    setReasons(payload.reasons);setCustomReasons(payload.custom);
+    setChecked(chk);setMerged(m);setHasData(pub.length>0||pay.length>0);setError("");
+    // ② 저장은 직렬 큐로 순차 전송(겹침 방지), 모든 대기 저장이 끝날 때까지 락 유지
+    isLoadingRef.current=true;
+    commitPending.current++;
+    commitChain.current=commitChain.current.then(async()=>{
+      await SheetDB.pushNow("ins:"+curYM,(payload.pub.length>0||payload.pay.length>0)?payload:null);
+      setSavedAt(new Date().toLocaleTimeString("ko-KR")); // ✓ 검증 저장됨
+    }).catch(()=>{}).finally(()=>{
+      commitPending.current=Math.max(0,commitPending.current-1);
+      if(commitPending.current===0) isLoadingRef.current=false; // 큐가 완전히 비워진 직후에만 락 해제
+    });
+    return commitChain.current;
+  }
+
+  // 마운트 / 월 변경: 새 달 로드(저장 안 함). 월 변경은 락의 예외(요구사항 3).
   useEffect(()=>{
-    applyMonthData(curYM);
-    // Refresh Drive file list for new month (best-effort)
+    isLoadingRef.current=false;
+    try{ applyLoad(loadInsData(curYM)||{}); }
+    catch(err){ console.error("4대보험 로드 오류:",err); setError("데이터를 불러오는 중 오류가 발생했습니다: "+(err&&err.message||err)); }
     setDriveFiles([]);
     driveFetchFileList(curYM).then(files=>setDriveFiles(files)).catch(()=>{});
   },[curYM]);
 
-  // 다른 사용자가 바꾼 4대보험 데이터를 제자리 갱신 (cloudRev 신호 — 30초 주기/포커스/수동)
-  // 내 저장 진행 중에는 syncFromCloud 가 막아주므로 작업 중 데이터가 덮어써지지 않음
+  // 다른 사용자 변경 수신(cloudRev: 30초/포커스/수동).
   useSkipFirstEffect(()=>{
-    const fresh=loadInsData(curYM);
-    const norm=o=>JSON.stringify({pub:(o&&o.pub)||[],pay:(o&&o.pay)||[],reasons:(o&&o.reasons)||{},custom:(o&&o.custom)||{},checked:(o&&o.checked)||{}});
-    const freshKey=fresh?norm(fresh):"none";
-    const curKey=(rawPub.length||rawPay.length)?norm({pub:rawPub,pay:rawPay,reasons,custom:customReasons,checked}):"none";
-    if(freshKey!==curKey)applyMonthData(curYM);
+    try{
+      if(isLoadingRef.current) return;                       // 업로드/저장 중 → 절대 건드리지 않음
+      const fresh=loadInsData(curYM);
+      if(!insHas(fresh)&&insHas(liveRef.current)) return;    // 서버는 비었는데 내겐 데이터가 있으면 → 절대 비우지 않음
+      if(insSerial(fresh)===insSerial(liveRef.current)) return; // 동일하면 무시
+      applyLoad(fresh||{});                                  // 진짜 외부 변경만 화면에 반영
+    }catch(err){ console.error("4대보험 동기화 오류:",err); }
   },[cloudRev]);
 
-  // 이 달 데이터를 서버에서 즉시 다시 불러오기 (수동 버튼)
+  // 이 달 데이터를 서버에서 즉시 다시 불러오기(수동) — 명시적 사용자 의도
   async function forceReloadMonth(){
     setSyncing(true);
-    try{ await SheetDB.refresh(); }catch(_){}   // 서버 최신 상태로 STORE.ins 갱신
-    applyMonthData(curYM);                        // 현재 월 화면 반영
+    isLoadingRef.current=false;
+    try{ await SheetDB.refresh(); }catch(_){}
+    const fresh=loadInsData(curYM);
+    if(insHas(fresh)||!insHas(liveRef.current)) applyLoad(fresh||{}); // 빈 서버로 내 데이터 날리지 않음
     driveFetchFileList(curYM).then(files=>setDriveFiles(files)).catch(()=>{});
     setLastSync(new Date().toLocaleTimeString("ko-KR"));
     setSyncing(false);
   }
-
-  // Auto-check zero-diff rows; save whenever data/reasons/checked change
-  useEffect(()=>{
-    if(merged.length>0){
-      // Auto-complete any newly calculated zero-diff rows
-      setChecked(prev=>{
-        let changed=false;const next={...prev};
-        merged.forEach(r=>{if(r.autoOk&&!next[r.id]){next[r.id]=true;changed=true;}});
-        return changed?next:prev;
-      });
-    }
-  },[merged]);
-  useSkipFirstEffect(()=>{
-    // Skip saving while a month-switch load is in progress (prevents cross-month pollution)
-    if(isLoadingRef.current)return;
-    if(rawPub.length>0||rawPay.length>0){
-      saveInsData(curYM,{pub:rawPub,pay:rawPay,reasons,custom:customReasons,checked});
-    }
-  },[rawPub,rawPay,reasons,customReasons,checked,curYM]);
 
   function readExcel(file,cb){
     const reader=new FileReader();
@@ -2037,99 +2152,95 @@ function Page4Insurance({cloudRev}){
     reader.readAsArrayBuffer(file);
   }
 
-  // 드라이브 업로드(유형 태그 포함) — fire-and-forget
+  // 드라이브 원본파일 업로드: 시트 저장과 완전 분리된 Fire-and-Forget + 직렬 큐.
+  // 한 번에 하나씩만 GAS 로 전송하여 동시 부하/락 타임아웃을 방지하고, 시트 데이터 전송을 막지 않음.
   function uploadToDrive(file,kind){
     if(!(GAS_DRIVE_URL&&GAS_DRIVE_URL!=="여기에_GAS_배포_URL_입력"))return;
     setDriveUploading(true);setDriveStatus("uploading");
-    driveUploadFile(file,curYM,kind)
-      .then(()=>{setDriveStatus("done");driveFetchFileList(curYM).then(files=>setDriveFiles(files));})
-      .catch(()=>setDriveStatus("err"))
-      .finally(()=>setDriveUploading(false));
+    driveQueue.current=driveQueue.current
+      .then(()=>driveUploadFile(file,curYM,kind))   // 직전 업로드가 끝난 뒤에 시작
+      .then(()=>{setDriveStatus("done");return driveFetchFileList(curYM).then(files=>setDriveFiles(files)).catch(()=>{});})
+      .catch(()=>{setDriveStatus("err");})
+      .finally(()=>{setDriveUploading(false);});
   }
+  // (4대보험 저장 경로는 위의 commit() → SheetDB.pushNow() 로 일원화됨)
   function handlePub(e){
     const f=e.target.files[0];if(!f)return;
+    isLoadingRef.current=true; // 업로드 즉시 락 (요구사항 2) — 파싱~저장 완료까지 외부 수신 차단
     setLoading("공단 고지서 처리 중...");setError("");
     readExcel(f,data=>{
-      // Strict mode: user selection overrides auto-detect completely
+     try{
       const insType=pubTypeOverride==="auto"?detectInsType(data):pubTypeOverride;
-      uploadToDrive(f,insType); // 건강보험/국민연금 유형 태그를 붙여 드라이브에 보관
       const newRows=insType==="국민연금"?parsePubPension(data):parsePubHealth(data);
-      // Accumulate by RRN — different depts uploaded separately all survive
-      setRawPub(prev=>{
-        const rrnMap={};
-        // Preserve all existing rows first (all depts)
-        prev.forEach(r=>{
-          const k=String(r.rrn).replace(/-/g,"").replace(/\s/g,"");
-          rrnMap[k||"_"+r.name+r.empId]={...r};
-        });
-        // Merge new rows: only overwrite fields of the same insurance type
-        newRows.forEach(r=>{
-          const k=String(r.rrn).replace(/-/g,"").replace(/\s/g,"");
-          const key=k||"_"+r.name+r.empId;
-          if(rrnMap[key]){
-            const existing=rrnMap[key];
-            if(insType==="국민연금"){
-              // Keep health fields from existing, update pension
-              rrnMap[key]={...existing,pension:r.pension,
-                insType:existing.insType==="건강보험"?"건강+연금":"국민연금"};
-            }else{
-              // Keep pension from existing, update health fields
-              rrnMap[key]={...existing,health:r.health,care:r.care,
-                healthAdj:r.healthAdj,careAdj:r.careAdj,
-                name:r.name,dept:r.dept,empId:r.empId,yearMonth:r.yearMonth,
-                insType:existing.insType==="국민연금"?"건강+연금":"건강보험"};
-            }
+      // liveRef.pub(최신)에 누적 병합 — 기존 타 보험/타 사업부 데이터 보존 (요구사항 1)
+      const map={};
+      (liveRef.current.pub||[]).forEach(r=>{map[insKeyOf(r)]=r;});
+      newRows.forEach(r=>{
+        const k=insKeyOf(r);
+        if(map[k]){
+          const ex=map[k];
+          if(insType==="국민연금"){
+            map[k]={...ex,pension:r.pension,insType:ex.insType==="건강보험"?"건강+연금":"국민연금"};
           }else{
-            rrnMap[key]={...r};
+            map[k]={...ex,health:r.health,care:r.care,healthAdj:r.healthAdj,careAdj:r.careAdj,
+              name:r.name,dept:r.dept,empId:r.empId,yearMonth:r.yearMonth,
+              insType:ex.insType==="국민연금"?"건강+연금":"건강보험"};
           }
-        });
-        const next=Object.values(rrnMap);
-        const m=mergeData(next,rawPay);setMerged(m);setHasData(true);setLoading("");
-        return next;
+        }else{ map[k]={...r}; }
       });
+      const nextPub=Object.values(map);
+      setLoading("");
+      // ① 가벼운 시트 데이터 먼저 전송(직렬 큐) → ② 그 다음 무거운 원본파일을 별도 비동기로 (GAS 과부하/타임아웃 방지)
+      commit({pub:nextPub,pay:liveRef.current.pay,reasons:liveRef.current.reasons,custom:liveRef.current.custom,checked:liveRef.current.checked})
+        .finally(()=>{ uploadToDrive(f,insType); });
+     }catch(ex){ setError("공단 고지서 처리 실패: "+(ex&&ex.message||ex)); setLoading(""); if(commitPending.current===0)isLoadingRef.current=false; }
     });
-   
     e.target.value="";
   }
   function handlePay(e){
     const f=e.target.files[0];if(!f)return;
+    isLoadingRef.current=true; // 파일 선택 즉시 락 — 누적 병합·전송 완료까지 외부 수신 차단
     setLoading("급여대장 처리 중...");setError("");
     readExcel(f,data=>{
-      // parsePay reads G(건강)+I(요양)+H(건강정산)+J(요양정산)+E(연금) all at once
-      // Accumulate pay by RRN same as pub — multiple depts survive
-      const newPayRows=parsePay(data);
-      setRawPay(prev=>{
-        const rrnMap={};
-        prev.forEach(r=>{const k=String(r.rrn).replace(/-/g,"").replace(/\s/g,"");rrnMap[k||"_"+r.name]=r;});
-        newPayRows.forEach(r=>{
-          const k=String(r.rrn).replace(/-/g,"").replace(/\s/g,"");
-          // Overwrite entire row for this RRN (pay file is source of truth for all pay columns)
-          rrnMap[k||"_"+r.name]={...r};
+      try{
+        const newPayRows=parsePay(data); // 주민번호 순수숫자 정제 + 헤더/열 자동 인식
+        if(newPayRows.length===0){
+          setError("급여대장에서 직원 행을 인식하지 못했습니다. 파일 양식(성명/주민번호/금액 열)을 확인해주세요.");
+          setLoading(""); if(commitPending.current===0)isLoadingRef.current=false;
+          uploadToDrive(f,"급여대장"); // 원본은 드라이브에 보관
+          return;
+        }
+        // ───── 사업부 기준 교체+누적: 같은 사업부(=같은 파일 재업로드)는 최신으로 교체, 타 사업부는 보존 ─────
+        const newDepts=new Set(newPayRows.filter(r=>(r.dept||"").trim()).map(r=>r.dept.trim()));
+        const map={};
+        (liveRef.current.pay||[]).forEach(r=>{
+          const d=(r.dept||"").trim();
+          if(d&&newDepts.has(d))return;   // 이번 파일에 포함된 사업부의 기존 행은 제외(최신으로 교체)
+          map[insKeyOf(r)]=r;             // 타 사업부/미분류는 그대로 보존(누적)
         });
-        const next=Object.values(rrnMap);
-        const m=mergeData(rawPub,next);setMerged(m);setHasData(true);setLoading("");
-        return next;
-      });
+        newPayRows.forEach(r=>{ map[insKeyOf(r)]={...r}; }); // 새 파일 인원 추가/최신화
+        const nextPay=Object.values(map);
+        setLoading("");
+        // ① 가벼운 시트 데이터(차이내역) 먼저 전송(직렬 큐) → ② 무거운 원본파일은 그 후 별도 비동기로
+        commit({pub:liveRef.current.pub,pay:nextPay,reasons:liveRef.current.reasons,custom:liveRef.current.custom,checked:liveRef.current.checked})
+          .finally(()=>{ uploadToDrive(f,"급여대장"); });
+      }catch(ex){ setError("급여대장 처리 실패: "+(ex&&ex.message||ex)); setLoading(""); if(commitPending.current===0)isLoadingRef.current=false; }
     });
-    uploadToDrive(f,"급여대장"); // 급여대장 유형 태그를 붙여 드라이브에 보관
     e.target.value="";
   }
 
   function handleDelete(){
     if(!confirm(curYM+" 데이터를 모두 삭제할까요?"))return;
-    deleteInsData(curYM);
-    setRawPub([]);setRawPay([]);setReasons({});setCustomReasons({});setChecked({});setMerged([]);setHasData(false);
+    commit({pub:[],pay:[],reasons:{},custom:{},checked:{}}).catch(()=>{isLoadingRef.current=false;}); // 빈 데이터 → pushNow(null)=시트에서 삭제
   }
 
   // Delete only rows matching a specific dept from current month
   function handleDeptDelete(){
     if(!deptDeleteSel){alert("삭제할 사업부를 선택해주세요.");return;}
     if(!confirm(curYM+" 데이터에서 "+deptDeleteSel+" 사업부를 삭제할까요?"))return;
-    const nextPub=rawPub.filter(r=>(r.dept||"미분류")!==deptDeleteSel);
-    const nextPay=rawPay.filter(r=>(r.dept||"미분류")!==deptDeleteSel);
-    setRawPub(nextPub);setRawPay(nextPay);
-    const m=mergeData(nextPub,nextPay);setMerged(m);
-    if(nextPub.length===0&&nextPay.length===0){deleteInsData(curYM);setHasData(false);}
+    const nextPub=(liveRef.current.pub||[]).filter(r=>(r.dept||"미분류")!==deptDeleteSel);
+    const nextPay=(liveRef.current.pay||[]).filter(r=>(r.dept||"미분류")!==deptDeleteSel);
+    commit({pub:nextPub,pay:nextPay,reasons:liveRef.current.reasons,custom:liveRef.current.custom,checked:liveRef.current.checked}).catch(()=>{isLoadingRef.current=false;});
     setDeptDeleteSel("");
   }
 
@@ -2204,16 +2315,19 @@ function Page4Insurance({cloudRev}){
   }
 
   function setReason(id,v){
-    setReasons(p=>({...p,[id]:v}));
-    // Auto-mark as checked when a reason is selected (not empty)
-    if(v)setChecked(p=>({...p,[id]:true}));
+    const reasons2={...liveRef.current.reasons,[id]:v};
+    const checked2=v?{...liveRef.current.checked,[id]:true}:liveRef.current.checked; // 사유 선택 시 자동완료
+    commit({pub:liveRef.current.pub,pay:liveRef.current.pay,reasons:reasons2,custom:liveRef.current.custom,checked:checked2}).catch(()=>{isLoadingRef.current=false;});
   }
   function setCustom(id,v){
-    setCustomReasons(p=>({...p,[id]:v}));
-    // Auto-mark done when custom text is entered
-    if(v.trim())setChecked(p=>({...p,[id]:true}));
+    const custom2={...liveRef.current.custom,[id]:v};
+    const checked2=v.trim()?{...liveRef.current.checked,[id]:true}:liveRef.current.checked; // 직접입력 시 자동완료
+    commit({pub:liveRef.current.pub,pay:liveRef.current.pay,reasons:liveRef.current.reasons,custom:custom2,checked:checked2}).catch(()=>{isLoadingRef.current=false;});
   }
-  function toggleCheck(id){setChecked(p=>({...p,[id]:!p[id]}))}
+  function toggleCheck(id){
+    const checked2={...liveRef.current.checked,[id]:!liveRef.current.checked[id]};
+    commit({pub:liveRef.current.pub,pay:liveRef.current.pay,reasons:liveRef.current.reasons,custom:liveRef.current.custom,checked:checked2}).catch(()=>{isLoadingRef.current=false;});
+  }
 
   // Dept summary
   const depts=useMemo(()=>["전체",...new Set(merged.map(r=>r.dept||"미분류"))]  ,[merged]);
@@ -2236,8 +2350,8 @@ function Page4Insurance({cloudRev}){
   const TD_DIFF=(v)=>{const n=Number(v||0);return <td style={{fontFamily:"'DM Mono',monospace",fontWeight:700,textAlign:"right",padding:"7px 8px",borderBottom:"1px solid #E8EEF5",color:n>0?"#DC2626":n<0?"#7C3AED":"#94A3B8",background:n!==0?"rgba(220,38,38,.04)":undefined,whiteSpace:"nowrap"}}>{n>0?"+":""}{fmtKRW(n)}</td>;};
   const TD_AMT=(v,clr)=><td style={{fontFamily:"'DM Mono',monospace",fontSize:11,fontWeight:600,textAlign:"right",padding:"7px 8px",borderBottom:"1px solid #E8EEF5",color:clr||"var(--sky-d)",whiteSpace:"nowrap"}}>{fmtKRW(v)}</td>;
 
-  const hasHealth=merged.some(r=>r.insType==="건강보험"||r.health>0||r.care>0);
-  const hasPension=merged.some(r=>r.insType==="국민연금"||r.pension>0);
+  const hasHealth=merged.some(r=>r.insType==="건강보험"||r.health>0||r.care>0||(r.pay&&((r.pay.health||0)>0||(r.pay.care||0)>0)));
+  const hasPension=merged.some(r=>r.insType==="국민연금"||r.pension>0||(r.pay&&(r.pay.pension||0)>0));
 
   function downloadVerificationExcel(){
     const dept=deptView==="전체"?"전체":deptView;
@@ -2269,9 +2383,9 @@ function Page4Insurance({cloudRev}){
       <button className="btn btn-ghost btn-sm" onClick={()=>shiftMonth(-1)} style={{fontWeight:700}}>&#8249; 이전달</button>
       <div style={{flex:1,textAlign:"center"}}>
         <div style={{fontSize:16,fontWeight:800,color:"var(--sky-deep)",letterSpacing:".05em"}}>{curYM} 4대보험 검증</div>
-        <div style={{fontSize:10,color:"var(--t3)",marginTop:2}}>{hasData?"데이터 저장됨 — 새로고침 후에도 유지됩니다":"데이터 없음 — 파일을 업로드해주세요"}</div>
+        <div style={{fontSize:10,color:"var(--t3)",marginTop:2}}>{hasData?(merged.length+"명 검증 · 자동완료 "+merged.filter(r=>r.autoOk).length+"건 · 불일치 "+merged.filter(r=>r.mismatch).length+"건"):"데이터 없음 — 공단 고지서·급여대장을 업로드해주세요"}</div>
         <div style={{fontSize:10,marginTop:3,fontWeight:600,color:SheetDB.getIns(curYM)?"#16A34A":"#DC2626"}}>
-          {"클라우드 공유: 이 달("+curYM+") "+(SheetDB.getIns(curYM)?"데이터 있음 ●":"데이터 없음 ○")}{lastSync?(" · 마지막 동기화 "+lastSync):""}
+          {"클라우드 공유: 이 달("+curYM+") "+(SheetDB.getIns(curYM)?"데이터 있음 ●":"데이터 없음 ○")}{savedAt?(" · ✓ 검증 저장됨 "+savedAt):(lastSync?(" · 마지막 동기화 "+lastSync):"")}
         </div>
       </div>
       <button className="btn btn-ghost btn-sm" onClick={forceReloadMonth} disabled={syncing} title="이 달 데이터를 서버에서 즉시 다시 불러옵니다" style={{fontWeight:700}}>{syncing?"동기화 중…":"↻ 이 달 새로고침"}</button>
@@ -2304,15 +2418,23 @@ function Page4Insurance({cloudRev}){
             return <div style={{textAlign:"center",padding:"16px 0",color:"var(--t3)",fontSize:12}}>GAS URL을 설정하면 드라이브 파일 목록이 표시됩니다.</div>;
           }
           const all=(driveFiles||[]).slice().sort((a,b)=>new Date(b.createdAt||0)-new Date(a.createdAt||0)); // 최신순
-          const KINDS=[["건강보험","#0EA5E9","#E0F2FE"],["국민연금","#16A34A","#F0FDF4"],["급여대장","#8B5CF6","#F5F3FF"]];
-          return KINDS.map(([kind,clr,bg])=>{
-            const f=all.find(x=>driveFileKind(x.name)===kind); // 정렬이 최신순이므로 첫 매칭 = 그 유형의 최신
-            return <div key={kind} style={{display:"flex",alignItems:"center",gap:10,padding:"9px 0",borderBottom:"1px solid var(--border)"}}>
+          const META={"건강보험":["#0EA5E9","#E0F2FE"],"국민연금":["#16A34A","#F0FDF4"],"급여대장":["#8B5CF6","#F5F3FF"],"기타":["#64748B","#F1F5F9"]};
+          // 표시 규칙: 건강보험·국민연금은 최신 1개 / 급여대장은 사업부별(=파일명별) 표시하되 같은 이름은 최신 1개만
+          const rows=[];
+          ["건강보험","국민연금"].forEach(kind=>{ const f=all.find(x=>driveFileKind(x.name)===kind); rows.push({kind,f,label:"최신"}); });
+          const seenName={};
+          const pays=all.filter(x=>driveFileKind(x.name)==="급여대장")        // all 은 최신순 정렬됨
+            .filter(f=>{ const nm=String(f.name||""); if(seenName[nm])return false; seenName[nm]=1; return true; }); // 같은 파일명은 최신 1개만, 다른 이름은 모두 유지
+          if(pays.length===0){ rows.push({kind:"급여대장",f:null,label:""}); }
+          else pays.forEach(f=>rows.push({kind:"급여대장",f,label:"업로드됨"}));
+          const renderRow=(kind,f,label,idx)=>{
+            const [clr,bg]=META[kind]||META["기타"];
+            return <div key={kind+"_"+(f?f.id||f.name:idx)} style={{display:"flex",alignItems:"center",gap:10,padding:"9px 0",borderBottom:"1px solid var(--border)"}}>
               <span style={{fontSize:10,fontWeight:700,color:clr,background:bg,border:"1px solid "+clr+"40",borderRadius:7,padding:"4px 8px",flexShrink:0,minWidth:62,textAlign:"center"}}>{kind}</span>
               {f?<>
                 <div style={{flex:1,minWidth:0}}>
                   <div style={{fontSize:12,fontWeight:600,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{f.name}</div>
-                  <div style={{fontSize:10,color:"#16A34A",fontWeight:600}}>{"최신"+(f.createdAt?" · "+new Date(f.createdAt).toLocaleString("ko-KR"):"")}</div>
+                  <div style={{fontSize:10,color:"#16A34A",fontWeight:600}}>{label+(f.createdAt?" · "+new Date(f.createdAt).toLocaleString("ko-KR"):"")}</div>
                 </div>
                 <a href={f.downloadUrl} target="_blank" rel="noopener noreferrer"
                   style={{fontSize:10,padding:"4px 10px",borderRadius:7,border:"1px solid #34A85340",background:"#F0FDF4",color:"#16A34A",fontWeight:600,textDecoration:"none",whiteSpace:"nowrap"}}>다운로드</a>
@@ -2320,7 +2442,11 @@ function Page4Insurance({cloudRev}){
                   style={{fontSize:10,padding:"4px 10px",borderRadius:7,border:"1px solid var(--border2)",background:"var(--sky-l)",color:"var(--sky-d)",fontWeight:600,textDecoration:"none",whiteSpace:"nowrap"}}>열기</a>
               </>:<div style={{flex:1,fontSize:11,color:"var(--t3)"}}>아직 업로드되지 않음</div>}
             </div>;
-          });
+          };
+          return <>
+            {rows.map((r,i)=>renderRow(r.kind,r.f,r.label,i))}
+            <div style={{marginTop:8,fontSize:10,color:"var(--t3)"}}>급여대장은 파일명별로 표시(같은 이름은 최신 1건만, 다른 이름은 모두) · 건강보험/국민연금은 최신 1건</div>
+          </>;
         })()}
       </div>
     </div>}
@@ -2535,6 +2661,23 @@ function Page4Insurance({cloudRev}){
 
 
 // ── Dashboard (메인 대시보드) ────────────────────────────────────────────────────
+class ErrorBoundary extends React.Component{
+  constructor(p){super(p);this.state={err:null};}
+  static getDerivedStateFromError(err){return {err:err};}
+  componentDidCatch(err,info){console.error("화면 렌더 오류:",err,info);}
+  render(){
+    if(this.state.err){
+      const e=this.state.err;
+      return <div style={{padding:"28px",fontFamily:"Noto Sans KR,sans-serif",color:"#991B1B",maxWidth:860,margin:"24px auto"}}>
+        <div style={{fontSize:18,fontWeight:700,marginBottom:10}}>이 화면을 그리는 중 오류가 발생했습니다</div>
+        <div style={{background:"#FEF2F2",border:"1px solid #FECACA",borderRadius:8,padding:12,fontFamily:"monospace",fontSize:13,whiteSpace:"pre-wrap",color:"#991B1B"}}>{String((e&&e.message)||e)}</div>
+        <pre style={{marginTop:10,fontSize:11,color:"#64748B",whiteSpace:"pre-wrap",maxHeight:260,overflow:"auto",background:"#F8FAFC",border:"1px solid #E2E8F0",borderRadius:8,padding:10}}>{String((e&&e.stack)||"")}</pre>
+        <button onClick={()=>this.setState({err:null})} style={{marginTop:12,padding:"8px 14px",borderRadius:8,border:"1px solid #CBD5E1",background:"#fff",cursor:"pointer",fontFamily:"inherit",fontWeight:600}}>다시 시도</button>
+      </div>;
+    }
+    return this.props.children;
+  }
+}
 function Dashboard(){
   const saved=lsGet();
   if(saved){delete saved.selectedDate;delete saved.calYear;delete saved.calMonth;}
@@ -2710,12 +2853,14 @@ function Dashboard(){
             </div>
           </header>
           <main className="pgcont">
+            <ErrorBoundary key={page}>
             {page==="home"&&<PageHome employees={employees||[]} tasks={tasks||[]} ts={ts||{}} apiRows={apiRows||[]} team={team||[]} calYear={calYear} calMonth={calMonth} onCalNav={onCalNav} onToggle={onToggle} onDelete={onDelete} onEditTask={onEditTask} onAddCal={onAddCal} selectedDate={selectedDate} onSelectDate={setSelectedDate}/>}
             {page==="ob"&&<PageOB apiRows={apiRows||[]} apiStatus={apiStatus} team={team||[]} onRefresh={handleRefresh} gTmpl={gTmpl} setGTmpl={setGTmpl}/>}
             {page==="team"&&<PageTeam tasks={tasks||[]} ts={ts||{}} team={team||[]} onToggle={onToggle} onDelete={onDelete} onEditTask={onEditTask} onUpdateTeam={setTeam} selectedDate={selectedDate} onSelectDate={setSelectedDate}/>}
             {page==="history"&&<PageHistory adminName={adminName} setAdminName={setAdminName} apiRows={apiRows||[]} setApiRows={setApiRows} apiStatus={apiStatus} setApiStatus={setApiStatus} apiUrl={apiUrl} setApiUrl={setApiUrl}/>}
             {page==="memo"&&<PageMemo cloudRev={cloudRev} selectedDate={selectedDate}/>}
             {page==="insurance"&&<Page4Insurance cloudRev={cloudRev}/>}
+            </ErrorBoundary>
           </main>
         </div>
       </div>
@@ -2782,7 +2927,13 @@ function App(){
   }
   return <Dashboard/>;
 }
-ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+try{
+  ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+}catch(err){
+  var r=document.getElementById("root");
+  if(r)r.innerHTML='<div style="padding:28px;font-family:Noto Sans KR,sans-serif;color:#991B1B;max-width:720px;margin:40px auto"><div style="font-size:18px;font-weight:700;margin-bottom:10px">렌더링 오류</div><div style="background:#FEF2F2;border:1px solid #FECACA;border-radius:8px;padding:12px;font-family:monospace;font-size:13px;white-space:pre-wrap">'+String(err&&err.message||err)+'</div></div>';
+  console.error(err);
+}
 
 </script>
 </body>
