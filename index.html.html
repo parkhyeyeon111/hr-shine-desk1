@@ -2701,6 +2701,18 @@ function Dashboard(){
   const[showGuide,setShowGuide]=useState(false);
   const[cloudRev,setCloudRev]=useState(0); // 다른 사용자 변경분을 당겨올 때 하위 페이지 강제 새로고침용
 
+  // tasks/ts 최신 스냅샷 미러 (전역 __addTask 등 stale closure 방지 + 즉시 push 용)
+  const tasksRef=useRef(tasks); const tsRef=useRef(ts);
+  useEffect(()=>{tasksRef.current=tasks;},[tasks]);
+  useEffect(()=>{tsRef.current=ts;},[ts]);
+  // tasks/ts 를 한 번에 갱신하고 즉시 클라우드 저장 (모든 To-Do 추가 경로 공용)
+  const commitTasks=useCallback((nextTasks,nextTs)=>{
+    tasksRef.current=nextTasks; tsRef.current=nextTs;
+    setTasks(nextTasks); setTs(nextTs);
+    SheetDB.setCollection("tasks",nextTasks);
+    SheetDB.setCollection("ts",nextTs);
+  },[]);
+
   // ── 컬렉션별 클라우드 저장 (변경 시 → 구글 시트로 push, optimistic) ──
   useSkipFirstEffect(()=>{SheetDB.setCollection("team",team)},[team]);
   useSkipFirstEffect(()=>{SheetDB.setCollection("employees",employees)},[employees]);
@@ -2751,11 +2763,12 @@ function Dashboard(){
   // Expose addTask globally so QuickAddModal can call it without prop-drilling
   useEffect(()=>{
     window.__addTask=(newTask)=>{
-      setTasks(p=>[...p,newTask]);
-      setTs(p=>({...p,[newTask.id]:"pending"}));
+      const nextTasks=[...(tasksRef.current||[]),newTask];
+      const nextTs={...(tsRef.current||{}),[newTask.id]:"pending"};
+      commitTasks(nextTasks,nextTs); // 상태 갱신 + 즉시 구글 시트 저장
     };
     return()=>{delete window.__addTask};
-  },[]);
+  },[commitTasks]);
   const onDelete=useCallback(id=>{setTasks(p=>p.filter(t=>t.id!==id));setTs(p=>{const s={...p};delete s[id];return s})},[]);
   const onEditTask=useCallback((id,patch)=>{setTasks(p=>(p||[]).map(t=>t.id===id?{...t,...patch}:t))},[]);
   const onCalNav=dir=>setCalMonth(m=>{let nm=m+dir;if(nm>11){setCalYear(y=>y+1);return 0}if(nm<0){setCalYear(y=>y-1);return 11}return nm});
@@ -2764,12 +2777,20 @@ function Dashboard(){
   function handleAddSchedules(payload){
     if(!payload)return;
     if(payload.kind==="tasks"){
-      const tks=payload.tasks||[];setTasks(p=>[...p,...tks]);setTs(p=>{const s={...p};tks.forEach(t=>s[t.id]="pending");return s});setToast("일정 "+tks.length+"개 추가 완료");
+      const tks=payload.tasks||[];
+      const nextTasks=[...(tasksRef.current||[]),...tks];
+      const nextTs={...(tsRef.current||{})}; tks.forEach(t=>nextTs[t.id]="pending");
+      commitTasks(nextTasks,nextTs); // 상태 갱신 + tasks/ts 즉시 push
+      setToast("일정 "+tks.length+"개 추가 완료");
     }else if(payload.kind==="routine"){
       const nr={id:uid(),task:payload.task,cycle:payload.cycle,startDate:payload.startDate,day:payload.day,legal:payload.legal,assignees:payload.assignees};
-      const newRts=[...(routines||[]),nr];setRoutines(newRts);
-      const ne=expandRoutine(nr,[...(tasks||[])],team||[]);
-      setTasks(p=>[...p,...ne]);setTs(p=>{const s={...p};ne.forEach(t=>s[t.id]="pending");return s});
+      const newRts=[...(routines||[]),nr];
+      const ne=expandRoutine(nr,[...(tasksRef.current||[])],team||[]);
+      const nextTasks=[...(tasksRef.current||[]),...ne];
+      const nextTs={...(tsRef.current||{})}; ne.forEach(t=>nextTs[t.id]="pending");
+      setRoutines(newRts);
+      SheetDB.setCollection("routines",newRts); // 정기 일정 즉시 push (누락 방지)
+      commitTasks(nextTasks,nextTs);             // 생성된 개별 일정도 즉시 push
       setToast("정기 일정 생성 완료 ("+ne.length+"개 일정 생성)");
     }
   }
@@ -2844,7 +2865,6 @@ function Dashboard(){
                 <span style={{width:8,height:8,borderRadius:"50%",background:"#16A34A",display:"inline-block",flexShrink:0}}/>
                 구글 시트 바로가기
               </a>
-              <button className="btn btn-ghost" style={{fontSize:11,padding:"5px 12px"}} onClick={()=>{syncFromCloud();handleRefresh();setToast("최신 데이터 동기화 중...")}}>↻ 동기화</button>
               <button className="btn btn-ghost" style={{fontSize:11,padding:"5px 12px"}} onClick={()=>setModal("routine")}>정기 일정 관리</button>
               <button className="btn btn-ghost" style={{fontSize:11,padding:"5px 12px"}} onClick={()=>setModal("schedule")}>+ 일정 추가</button>
               <button className="btn btn-primary" style={{fontSize:11,padding:"5px 14px"}} onClick={()=>setModal("employee")}>+ 직원 추가</button>
