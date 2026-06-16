@@ -177,7 +177,7 @@ const {
   useRef
 } = React;
 const API_URL = "https://script.google.com/macros/s/AKfycbzd8dkOgHBHcsauhB4H2ASU_mdJ9aSAS0IZi66kmwHaXy1QJq3sftoRyPjjxaqZamGjLw/exec";
-const SHARED_API_URL = "https://script.google.com/macros/s/AKfycbyB6kJaURH8R-NJufV3eCF0nwmAhUI_XXHStzo7jm13e_8vNdcWzr9i1Sm_G7aHlNSZ/exec";
+const SHARED_API_URL = "https://script.google.com/macros/s/AKfycbyn4BFbo-RaF0w1xUZ1upphJsisTdvVCj9ulRiD1Q_Axj6ruXxKaGcVFzmjgaiLKG9T/exec";
 const LS_KEY = "hr_v15";
 const GTMPL_KEY = "hr_v15_gtmpl";
 const ROUTINE_KEY = "hr_v15_routines";
@@ -257,11 +257,19 @@ const SheetDB = function () {
   };
   function applyState(d) {
     if (!d || typeof d !== "object") return;
+    const arrClobber = (cur, next) => Array.isArray(next) && next.length === 0 && Array.isArray(cur) && cur.length > 0; // 빈값이 내용을 덮는 경우
+    const objClobber = (cur, next) => next && typeof next === "object" && Object.keys(next).length === 0 && cur && typeof cur === "object" && Object.keys(cur).length > 0;
     ["team", "employees", "tasks", "routines", "memos"].forEach(k => {
-      if (Array.isArray(d[k]) && !dirty.has(k)) STORE[k] = d[k];
+      if (Array.isArray(d[k]) && !dirty.has(k)) {
+        if (arrClobber(STORE[k], d[k])) return; // 비어있는 서버값으로 비어있지 않은 로컬을 덮어쓰지 않음(유실 방지)
+        STORE[k] = d[k];
+      }
     });
     ["ts", "gTmpl"].forEach(k => {
-      if (d[k] && typeof d[k] === "object" && !Array.isArray(d[k]) && !dirty.has(k)) STORE[k] = d[k];
+      if (d[k] && typeof d[k] === "object" && !Array.isArray(d[k]) && !dirty.has(k)) {
+        if (objClobber(STORE[k], d[k])) return;
+        STORE[k] = d[k];
+      }
     });
     if (typeof d.guide === "string" && !dirty.has("guide")) STORE.guide = d.guide;
     if (typeof d.adminName === "string" && d.adminName && !dirty.has("adminName")) STORE.adminName = d.adminName;
@@ -270,7 +278,7 @@ const SheetDB = function () {
         if (!(key in d.cl) && !dirty.has("cl:" + key)) delete STORE.cl[key];
       });
       Object.keys(d.cl).forEach(key => {
-        if (!dirty.has("cl:" + key)) STORE.cl[key] = d.cl[key];
+        if (!dirty.has("cl:" + key) && !objClobber(STORE.cl[key], d.cl[key])) STORE.cl[key] = d.cl[key];
       });
     }
     if (d.ins && typeof d.ins === "object") {
@@ -278,7 +286,7 @@ const SheetDB = function () {
         if (!(ym in d.ins) && !dirty.has("ins:" + ym)) delete STORE.ins[ym];
       });
       Object.keys(d.ins).forEach(ym => {
-        if (!dirty.has("ins:" + ym)) STORE.ins[ym] = d.ins[ym];
+        if (!dirty.has("ins:" + ym) && !objClobber(STORE.ins[ym], d.ins[ym])) STORE.ins[ym] = d.ins[ym];
       });
     }
   }
@@ -7636,7 +7644,12 @@ function Dashboard() {
   const reconcile = useCallback(data => {
     if (!data) return;
     const setIfDiff = (cur, next, setter) => {
-      if (next !== undefined && JSON.stringify(cur) !== JSON.stringify(next)) setter(next);
+      if (next === undefined) return;
+      if (JSON.stringify(cur) === JSON.stringify(next)) return;
+      const emptyNext = (Array.isArray(next) && next.length === 0) || (next && typeof next === "object" && !Array.isArray(next) && Object.keys(next).length === 0);
+      const nonEmptyCur = (Array.isArray(cur) && cur.length > 0) || (cur && typeof cur === "object" && !Array.isArray(cur) && Object.keys(cur).length > 0);
+      if (emptyNext && nonEmptyCur) return; // 빈 서버값으로 내용 있는 로컬을 덮어쓰지 않음(유실 방지)
+      setter(next);
     };
     setIfDiff(team, data.team, setTeam);
     setIfDiff(employees, data.employees, setEmployees);
