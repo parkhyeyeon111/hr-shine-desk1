@@ -177,7 +177,7 @@ const {
   useRef
 } = React;
 const API_URL = "https://script.google.com/macros/s/AKfycbzd8dkOgHBHcsauhB4H2ASU_mdJ9aSAS0IZi66kmwHaXy1QJq3sftoRyPjjxaqZamGjLw/exec";
-const SHARED_API_URL = "https://script.google.com/macros/s/AKfycbwDWVM7POoQDdjWrRCq_RegBxbSSoReivc-XZIw4PJDtxgN8uGa18RBkp1GLRXFzGGd/exec";
+const SHARED_API_URL = "https://script.google.com/macros/s/AKfycbyB6kJaURH8R-NJufV3eCF0nwmAhUI_XXHStzo7jm13e_8vNdcWzr9i1Sm_G7aHlNSZ/exec";
 const LS_KEY = "hr_v15";
 const GTMPL_KEY = "hr_v15_gtmpl";
 const ROUTINE_KEY = "hr_v15_routines";
@@ -284,14 +284,38 @@ const SheetDB = function () {
   }
   function gasRun(fn) {
     const args = Array.prototype.slice.call(arguments, 1);
-    return new Promise((resolve, reject) => {
-      if (!(typeof google !== "undefined" && google.script && google.script.run)) {
-        reject(new Error("google.script.run 사용 불가 — 이 앱은 Apps Script 웹앱(/exec) 주소로 열어야 합니다."));
-        return;
-      }
-      const runner = google.script.run.withSuccessHandler(resolve).withFailureHandler(reject);
-      runner[fn].apply(runner, args);
-    });
+    const hasGAS = typeof google !== "undefined" && google.script && google.script.run;
+    if (hasGAS) {
+      return new Promise((resolve, reject) => {
+        const runner = google.script.run.withSuccessHandler(resolve).withFailureHandler(reject);
+        runner[fn].apply(runner, args);
+      });
+    }
+    // 폴백: google.script.run 이 없는 환경(Vercel/정적호스팅/로컬파일) → Apps Script /exec 로 fetch
+    return gasFetch(fn, args);
+  }
+  async function gasFetch(fn, args) {
+    if (fn === "getState") {
+      const r = await fetch(SHARED_API_URL + "?action=getState&t=" + Date.now());
+      if (!r.ok) throw new Error("HTTP " + r.status);
+      return await r.json();
+    }
+    if (fn === "listDriveFiles") {
+      const r = await fetch(SHARED_API_URL + "?action=listFiles&subFolderName=" + encodeURIComponent(args[0] || "default"));
+      if (!r.ok) throw new Error("HTTP " + r.status);
+      const d = await r.json();
+      return (d && d.files) || (Array.isArray(d) ? d : []);
+    }
+    if (fn === "saveCollection") {
+      await fetch(SHARED_API_URL, { method: "POST", mode: "no-cors", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "replace", collection: args[0], value: args[1] }) });
+      return true; // no-cors: 응답을 읽을 수 없어 낙관적 성공 처리(미러+이후 getState로 확인)
+    }
+    if (fn === "uploadDriveFile") {
+      const b = args[0] || {};
+      await fetch(SHARED_API_URL, { method: "POST", mode: "no-cors", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "uploadFile", fileName: b.fileName, base64Data: b.base64Data, mimeType: b.mimeType, subFolderName: b.subFolderName }) });
+      return { ok: true };
+    }
+    throw new Error("알 수 없는 작업: " + fn);
   }
   async function boot() {
     emit("loading");
@@ -377,20 +401,15 @@ const SheetDB = function () {
     }
   }
   async function diagnose() {
-    if (!(typeof google !== "undefined" && google.script && google.script.run)) {
-      return {
-        ok: false,
-        stage: "env",
-        msg: "이 화면이 Apps Script 웹앱(/exec) 주소로 열리지 않았습니다.\n다운로드한 파일(file://)이 아니라, 배포한 /exec 주소로 접속해야 저장이 됩니다."
-      };
-    }
+    const hasGAS = typeof google !== "undefined" && google.script && google.script.run;
+    const mode = hasGAS ? "google.script.run (Apps Script 호스팅)" : "fetch (외부 호스팅/로컬)";
     try {
       await gasRun("getState");
     } catch (e) {
       return {
         ok: false,
         stage: "read",
-        msg: "서버 읽기에 실패했습니다 (" + (e && e.message || e) + ").\n배포 액세스 권한/권한 승인을 확인하세요."
+        msg: "[전송 방식: " + mode + "]\n서버 읽기에 실패했습니다 (" + (e && e.message || e) + ").\n외부 호스팅(Vercel/로컬)이라면 저장용 Apps Script 배포의 '액세스 권한'이 반드시 '모든 사용자'여야 합니다."
       };
     }
     const token = "diag_" + Date.now();
@@ -400,7 +419,7 @@ const SheetDB = function () {
       return {
         ok: false,
         stage: "write",
-        msg: "쓰기(저장)에 실패했습니다 (" + (e && e.message || e) + ")."
+        msg: "[전송 방식: " + mode + "]\n쓰기(저장)에 실패했습니다 (" + (e && e.message || e) + ")."
       };
     }
     let d2;
@@ -419,7 +438,7 @@ const SheetDB = function () {
     if (d2 && d2.__diag__ === token) return {
       ok: true,
       stage: "ok",
-      msg: "✓ 정상입니다. 읽기와 쓰기(저장) 모두 서버에 반영됩니다."
+      msg: "✓ 정상입니다. 읽기와 쓰기(저장) 모두 서버에 반영됩니다.\n[전송 방식: " + mode + "]"
     };
     return {
       ok: false,
@@ -5973,6 +5992,7 @@ function Page4Insurance({
   const [driveFiles, setDriveFiles] = useState([]);
   const [driveUploading, setDriveUploading] = useState(false);
   const [driveStatus, setDriveStatus] = useState("");
+  const [driveErr, setDriveErr] = useState("");
   const [showDrivePanel, setShowDrivePanel] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const [lastSync, setLastSync] = useState("");
@@ -6142,9 +6162,11 @@ function Page4Insurance({
     setDriveStatus("uploading");
     driveQueue.current = driveQueue.current.then(() => driveUploadFile(file, curYM, kind)).then(() => {
       setDriveStatus("done");
+      setDriveErr("");
       return driveFetchFileList(curYM).then(files => setDriveFiles(files)).catch(() => {});
-    }).catch(() => {
+    }).catch((err) => {
       setDriveStatus("err");
+      setDriveErr(String((err && (err.message || err)) || "알 수 없는 오류"));
     }).finally(() => {
       setDriveUploading(false);
     });
@@ -6625,7 +6647,7 @@ function Page4Insurance({
       color: "#DC2626",
       fontWeight: 600
     }
-  }, "\uB4DC\uB77C\uC774\uBE0C \uC5C5\uB85C\uB4DC \uC2E4\uD328 (\uB85C\uCEEC \uC800\uC7A5\uC740 \uC815\uC0C1)")), showDrivePanel && React.createElement("div", {
+  }, "\uB4DC\uB77C\uC774\uBE0C \uC5C5\uB85C\uB4DC \uC2E4\uD328: " + (driveErr || "(\uB85C\uCEEC \uC800\uC7A5\uC740 \uC815\uC0C1)"))), showDrivePanel && React.createElement("div", {
     className: "card",
     style: {
       marginBottom: 14,
